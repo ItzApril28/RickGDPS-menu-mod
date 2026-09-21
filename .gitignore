@@ -63,3 +63,11 @@ build-*/
 # CLion
 .idea/
 /cmake-build-*/
+
+# Local scratch / debug output (ad-hoc dumps, build logs, temp patch scripts)
+*.log
+dump_*.txt
+pb.txt
+popup_*.txt
+tools/_patch_*.py
+tools/fix_popup_*.py

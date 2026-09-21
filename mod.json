@@ -1,16 +1,18 @@
 {
-	"geode": "5.9.0",
+	"geode": "5.8.2",
 	"gd": {
 		"win": "2.2081",
 		"android": "2.2081",
 		"mac": "2.2081",
 		"ios": "2.2081"
 	},
-	"id": "imes.bettervisuals",
-	"name": "Better Visuals and FPS",
-	"version": "v2.0.0",
-	"developer": "imes",
-	"description": "Neat upscaling and post-processing mod.",
+	"id": "itzapril28.bettervisual-and-audio",
+	"name": "RickGdps Menu Mod",
+	"version": "v1.4.6",
+	"early-load": true,
+	"load-priority": -4000,
+	"developer": "RickGdps",
+	"description": "Enhanced visuals, dynamic resolution scaling, super-sampling, custom shaders, studio audio DSP, and a custom GD-styled settings UI for Geometry Dash.",
 	"tags": [
 		"universal",
 		"enhancement",
@@ -24,35 +26,149 @@
 	"resources": {
 		"sprites": [
 			"resources/*.png"
+		],
+		"files": [
+			"resources/*.fnt"
 		]
 	},
 	"settings": {
-		"master-title": {
+		"title-master": {
 			"type": "title",
-			"name": "Master Settings"
+			"name": "Master Controls"
 		},
 		"enabled": {
 			"type": "bool",
 			"name": "Enable Mod",
-			"description": "Master toggle for all effects.",
+			"description": "Master toggle for all visual post-processing effects.",
 			"default": true
 		},
 		"enable-fun": {
 			"type": "bool",
-			"name": "Enable Fun Shaders",
-			"description": "Master toggle for fun/gimmick effects.",
+			"name": "Enable Stylized & Fun Shaders",
+			"description": "Master toggle for creative, retro, and cinematic shader effects.",
 			"default": true,
 			"enable-if": "enabled"
 		},
-		"rendering-title": {
-			"type": "title",
-			"name": "Rendering"
+		"global-shader-enabled": {
+			"type": "bool",
+			"name": "Global Scene Shaders",
+			"description": "Apply selected visual effects across all scenes including menus and creator layers (default applies only during gameplay).",
+			"default": false,
+			"enable-if": "enabled"
 		},
-		"render-scale": {
+
+		"title-presets": {
+			"type": "title",
+			"name": "Preset Profiles"
+		},
+		"performance-preset": {
+			"type": "string",
+			"name": "Performance Profile",
+			"description": "Quick performance configuration presets.",
+			"default": "Custom",
+			"one-of": [
+				"Custom",
+				"Max FPS",
+				"Balanced",
+				"Visual Quality",
+				"Cinematic"
+			],
+			"enable-if": "enabled"
+		},
+		"effect-preset": {
+			"type": "string",
+			"name": "Combined Effect Theme",
+			"description": "Ready-to-use aesthetic theme combinations.",
+			"default": "Custom",
+			"one-of": [
+				"Custom",
+				"Cyberpunk",
+				"Retro",
+				"Cinema",
+				"Dreamscape",
+				"Comic",
+				"Noir",
+				"Arcade",
+				"Ethereal",
+				"Glitch",
+				"RTX",
+				"Nostalgic",
+				"Deep Water"
+			],
+			"enable-if": "enable-fun"
+		},
+		"bloom-preset": {
+			"type": "string",
+			"name": "Bloom Profile",
+			"description": "Pre-tuned bloom thresholds, intensities, and blur spreads. Nature, Butter Glow, Nostalgic Bloom and Memories are the v1.4.6 profiles.",
+			"default": "Custom",
+			"one-of": [
+				"Custom",
+				"Soft",
+				"Dreamy",
+				"Neon",
+				"Sunset",
+				"Frost",
+				"Fire",
+				"Noir",
+				"Pastel",
+				"Intense",
+				"Nature",
+				"Butter Glow",
+				"Nostalgic Bloom",
+				"Memories"
+			],
+			"enable-if": "enable-fun"
+		},
+
+		"title-resolution": {
+			"type": "title",
+			"name": "Display & Resolution Scaling"
+		},
+		"drs-enabled": {
+			"type": "bool",
+			"name": "Dynamic Render Scaling (DRS)",
+			"description": "Automatically adjusts internal resolution in real-time to preserve target frame rate during complex level sections.",
+			"default": false,
+			"enable-if": "enabled"
+		},
+		"drs-target-fps": {
+			"type": "string",
+			"name": "DRS Target FPS",
+			"description": "Target framerate threshold for Dynamic Render Scaling.",
+			"default": "Screen Refresh Rate",
+			"one-of": [
+				"Screen Refresh Rate",
+				"60 FPS",
+				"120 FPS",
+				"144 FPS",
+				"165 FPS",
+				"240 FPS",
+				"360 FPS",
+				"Custom"
+			],
+			"enable-if": "drs-enabled"
+		},
+		"drs-custom-fps": {
 			"type": "float",
-			"name": "Render Scale",
-			"description": "Render at a lower internal resolution, upscale to the current window size.",
-			"default": 1.0,
+			"name": "DRS Custom Target FPS",
+			"description": "Custom framerate target when DRS Target FPS is set to Custom.",
+			"default": 144.0,
+			"min": 30.0,
+			"max": 1000.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 10.0,
+				"slider": true,
+				"slider-step": 1.0
+			},
+			"enable-if": "drs-enabled"
+		},
+		"drs-min-scale": {
+			"type": "float",
+			"name": "DRS Minimum Scale",
+			"description": "Lowest internal resolution scale DRS can drop to under heavy load.",
+			"default": 0.5,
 			"min": 0.25,
 			"max": 1.0,
 			"control": {
@@ -60,48 +176,93 @@
 				"arrow-step": 0.05,
 				"slider": true,
 				"slider-step": 0.01
-			}
+			},
+			"enable-if": "drs-enabled"
+		},
+		"drs-max-scale": {
+			"type": "float",
+			"name": "DRS Maximum Scale",
+			"description": "Highest resolution scale DRS will upscale up to when framerate is stable.",
+			"default": 1.0,
+			"min": 0.5,
+			"max": 2.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			},
+			"enable-if": "drs-enabled"
+		},
+		"drs-sensitivity": {
+			"type": "string",
+			"name": "DRS Response Sensitivity",
+			"description": "How quickly resolution adapts to sudden frametime spikes.",
+			"default": "Normal",
+			"one-of": [
+				"Smooth (Slow)",
+				"Normal",
+				"Aggressive (Fast)"
+			],
+			"enable-if": "drs-enabled"
+		},
+		"render-scale": {
+			"type": "float",
+			"name": "Static Render Scale",
+			"description": "Render resolution multiplier (0.25x to 2.0x SSAA) used when DRS is disabled.",
+			"default": 1.0,
+			"min": 0.25,
+			"max": 2.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			},
+			"enable-if": "enabled"
 		},
 		"upscale-method": {
 			"type": "string",
-			"name": "Upscale Method",
-			"description": "How the game is scaled back up. Turn off automatically at 1x scale.",
+			"name": "Upscaling / Reconstruction Method",
+			"description": "Filter used to reconstruct the final image onto your screen.",
 			"default": "FSR 1",
 			"one-of": [
 				"Nearest",
 				"FSR 1"
-			]
+			],
+			"enable-if": "enabled"
 		},
-		"aa-title": {
+
+		"title-aa-sharpening": {
 			"type": "title",
-			"name": "Anti-aliasing"
+			"name": "Anti-Aliasing & Sharpening"
 		},
 		"aa-method": {
 			"type": "string",
-			"name": "AA Method",
-			"description": "Fullscreen (whole game window) anti-aliasing method.",
+			"name": "Anti-Aliasing Technique",
+			"description": "Fullscreen edge smoothing algorithm (including Super-Sampling SSAA).",
 			"default": "SMAA High",
 			"one-of": [
 				"Off",
 				"FXAA",
 				"SMAA High",
-				"SMAA Ultra"
-			]
-		},
-		"sharpening-title": {
-			"type": "title",
-			"name": "Sharpening"
+				"SMAA Ultra",
+				"SSAA 1.5x (Super-Sampling)",
+				"SSAA 2.0x (Super-Sampling)"
+			],
+			"enable-if": "enabled"
 		},
 		"cas-enabled": {
 			"type": "bool",
 			"name": "AMD FidelityFX CAS",
-			"description": "Apply contrast-adaptive sharpening.",
-			"default": false
+			"description": "Contrast-adaptive edge and texture sharpening.",
+			"default": false,
+			"enable-if": "enabled"
 		},
 		"cas-sharpness": {
 			"type": "float",
-			"name": "CAS Sharpness",
-			"description": "Sharpening strength. 0 has less ringing, 1 is strongest.",
+			"name": "CAS Sharpness Strength",
+			"description": "Sharpening intensity (0 = subtle edge enhancement, 1 = maximum sharpness).",
 			"default": 0.0,
 			"min": 0.0,
 			"max": 1.0,
@@ -110,92 +271,1197 @@
 				"arrow-step": 0.1,
 				"slider": true,
 				"slider-step": 0.05
-			}
+			},
+			"enable-if": "cas-enabled"
 		},
-		"fun-title": {
+
+		"title-lighting": {
 			"type": "title",
-			"name": "Fun"
+			"name": "Lighting & Atmosphere"
 		},
 		"bloom-enabled": {
 			"type": "bool",
-			"name": "Bloom",
-			"description": "Apply a mild bloom glow.",
-			"default": false
+			"name": "Bloom Glow",
+			"description": "High dynamic range light scattering and glow.",
+			"default": false,
+			"enable-if": "enable-fun"
 		},
 		"bloom-threshold": {
 			"type": "float",
-			"name": "Bloom Threshold",
-			"description": "Brightness cutoff. Higher means only brighter pixels glow.",
+			"name": "Bloom Brightness Threshold",
+			"description": "Cutoff point for pixels that produce glow.",
 			"default": 0.7,
 			"min": 0.0,
 			"max": 1.0,
-			"enable-if": "bloom-enabled",
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.05,
 				"slider": true,
 				"slider-step": 0.01
-			}
+			},
+			"enable-if": "bloom-enabled"
 		},
 		"bloom-intensity": {
 			"type": "float",
-			"name": "Bloom Intensity",
-			"description": "Strength of the glow over the original image.",
+			"name": "Bloom Glow Intensity",
+			"description": "Brightness multiplier of the bloom layer.",
 			"default": 0.3,
 			"min": 0.0,
 			"max": 1.5,
-			"enable-if": "bloom-enabled",
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.05,
 				"slider": true,
 				"slider-step": 0.01
-			}
+			},
+			"enable-if": "bloom-enabled"
 		},
 		"bloom-radius": {
 			"type": "float",
-			"name": "Bloom Radius",
-			"description": "Spread of the glow in pixels at 1080p (scales with resolution).",
+			"name": "Bloom Blur Radius",
+			"description": "Dispersion width of the glow (in pixels at 1080p).",
 			"default": 8.0,
 			"min": 0.0,
 			"max": 16.0,
-			"enable-if": "bloom-enabled",
 			"control": {
 				"arrows": true,
 				"arrow-step": 1.0,
 				"slider": true,
 				"slider-step": 0.5
-			}
+			},
+			"enable-if": "bloom-enabled"
+		},
+		"god-rays-enabled": {
+			"type": "bool",
+			"name": "Volumetric God Rays",
+			"description": "Radial light shafts emitting outward from screen center.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"god-rays-strength": {
+			"type": "float",
+			"name": "God Rays Strength",
+			"description": "Intensity of light rays.",
+			"default": 0.35,
+			"min": 0.05,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			},
+			"enable-if": "god-rays-enabled"
+		},
+		"lens-flare-enabled": {
+			"type": "bool",
+			"name": "Anamorphic Lens Flare",
+			"description": "Cinematic horizontal lens flare glare.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"lens-flare-strength": {
+			"type": "float",
+			"name": "Lens Flare Strength",
+			"description": "Glare brightness.",
+			"default": 0.5,
+			"min": 0.0,
+			"max": 1.5,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.1,
+				"slider": true,
+				"slider-step": 0.05
+			},
+			"enable-if": "lens-flare-enabled"
+		},
+		"ambient-enabled": {
+			"type": "bool",
+			"name": "Ambient Aurora",
+			"description": "Layered aurora curtains drifting through the sky.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"ambient-strength": {
+			"type": "float",
+			"name": "Aurora Intensity",
+			"description": "Brightness of the aurora curtains.",
+			"default": 0.75,
+			"min": 0.0,
+			"max": 1.5,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.05
+			},
+			"enable-if": "ambient-enabled"
+		},
+		"vignette-enabled": {
+			"type": "bool",
+			"name": "Cinematic Vignette",
+			"description": "Soft gradient darkening along screen borders.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"vignette-strength": {
+			"type": "float",
+			"name": "Vignette Darkening Amount",
+			"description": "Dark border falloff intensity.",
+			"default": 0.4,
+			"min": 0.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.02
+			},
+			"enable-if": "vignette-enabled"
+		},
+
+		"title-color-grading": {
+			"type": "title",
+			"name": "Color Grading & Tonemapping"
+		},
+		"color-edit-enabled": {
+			"type": "bool",
+			"name": "Color Grade Controls",
+			"description": "Custom color LUTs, brightness, contrast, saturation, and white balance.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"color-lut": {
+			"type": "string",
+			"name": "Color Palette LUT",
+			"default": "Vibrant",
+			"one-of": [
+				"Vibrant",
+				"Teal & Orange",
+				"Warm Film",
+				"Cool Night",
+				"Pastel"
+			],
+			"enable-if": "color-edit-enabled"
+		},
+		"color-brightness": {
+			"type": "float",
+			"name": "Brightness",
+			"default": 0.0,
+			"min": -1.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			},
+			"enable-if": "color-edit-enabled"
+		},
+		"color-contrast": {
+			"type": "float",
+			"name": "Contrast",
+			"default": 0.0,
+			"min": -1.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			},
+			"enable-if": "color-edit-enabled"
+		},
+		"color-saturation": {
+			"type": "float",
+			"name": "Saturation",
+			"default": 0.0,
+			"min": -1.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			},
+			"enable-if": "color-edit-enabled"
+		},
+		"color-temperature": {
+			"type": "float",
+			"name": "Color Temperature",
+			"description": "Warm (orange) to Cool (blue) white balance bias.",
+			"default": 0.0,
+			"min": -0.25,
+			"max": 0.25,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.02,
+				"slider": true,
+				"slider-step": 0.01
+			},
+			"enable-if": "color-edit-enabled"
+		},
+		"cinematic-lut-enabled": {
+			"type": "bool",
+			"name": "Cinematic LUT",
+			"description": "Hollywood film-style color matrix tonemapping.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"cinematic-lut-strength": {
+			"type": "float",
+			"name": "Cinematic LUT Strength",
+			"default": 1.0,
+			"min": 0.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			},
+			"enable-if": "cinematic-lut-enabled"
+		},
+		"sepia-enabled": {
+			"type": "bool",
+			"name": "Sepia Tone",
+			"description": "Classic vintage warm monochrome tone.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"sepia-strength": {
+			"type": "float",
+			"name": "Sepia Strength",
+			"default": 1.0,
+			"min": 0.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			},
+			"enable-if": "sepia-enabled"
 		},
 		"grayscale-enabled": {
 			"type": "bool",
-			"name": "Grayscale",
-			"description": "Apply a grayscale filter.",
-			"default": false
+			"name": "Black & White (Grayscale)",
+			"description": "Classic luminance-based desaturation.",
+			"default": false,
+			"enable-if": "enable-fun"
 		},
-		"pixelate-enabled": {
-			"type": "bool",
-			"name": "Pixelate",
-			"description": "Apply a pixelated effect.",
-			"default": false
+
+		"title-camera-distortion": {
+			"type": "title",
+			"name": "Camera & Optical Distortion"
 		},
-		"dithering-enabled": {
+		"aberration-enabled": {
 			"type": "bool",
-			"name": "Dithering Filter",
-			"description": "Apply an 8-bit color palette dithering.",
-			"default": false
+			"name": "Chromatic Aberration & Lens",
+			"description": "RGB color fringe separation and lens curvature warping.",
+			"default": false,
+			"enable-if": "enable-fun"
 		},
-		"vhs-enabled": {
+		"aberration-strength": {
+			"type": "float",
+			"name": "Aberration Offset Strength",
+			"default": 0.005,
+			"min": 0.0,
+			"max": 0.03,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.001,
+				"slider": true,
+				"slider-step": 0.001
+			},
+			"enable-if": "aberration-enabled"
+		},
+		"radial-blur-enabled": {
 			"type": "bool",
-			"name": "VHS Filter",
-			"description": "Apply an animated VHS-style filter.",
-			"default": false
+			"name": "Radial Speed Blur",
+			"description": "Velocity zoom blur emanating from the player view center.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"radial-blur-strength": {
+			"type": "float",
+			"name": "Radial Blur Intensity",
+			"default": 0.02,
+			"min": 0.0,
+			"max": 0.1,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.005,
+				"slider": true,
+				"slider-step": 0.002
+			},
+			"enable-if": "radial-blur-enabled"
+		},
+		"motion-blur-enabled": {
+			"type": "bool",
+			"name": "Camera Motion Blur",
+			"description": "Directional motion trails for fast camera movement.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"motion-blur-strength": {
+			"type": "float",
+			"name": "Motion Blur Trail Length",
+			"default": 0.5,
+			"min": 0.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.02
+			},
+			"enable-if": "motion-blur-enabled"
+		},
+		"death-warp-enabled": {
+			"type": "bool",
+			"name": "Death Warp Effect",
+			"description": "Dynamic chromatic warp shockwave pulse when the player dies.",
+			"default": true
+		},
+		"depth-focus-enabled": {
+			"type": "bool",
+			"name": "Depth of Field Focus",
+			"description": "Perimeter defocus blur emphasizing center-screen focus.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"depth-focus-strength": {
+			"type": "float",
+			"name": "Depth Blur Amount",
+			"default": 0.5,
+			"min": 0.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.02
+			},
+			"enable-if": "depth-focus-enabled"
+		},
+		"wobble-enabled": {
+			"type": "bool",
+			"name": "Camera Wobble",
+			"description": "Organic, gentle floating camera wave displacement.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"wobble-speed": {
+			"type": "float",
+			"name": "Wobble Speed",
+			"description": "Speed multiplier for the camera wobble drift and tremor motion.",
+			"default": 1.0,
+			"min": 0.1,
+			"max": 5.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.1,
+				"slider": true,
+				"slider-step": 0.05
+			},
+			"enable-if": "wobble-enabled"
+		},
+
+		"title-retro-stylized": {
+			"type": "title",
+			"name": "Retro & Stylized Shaders"
 		},
 		"crt-enabled": {
 			"type": "bool",
-			"name": "CRT Filter",
-			"description": "Apply a CRT-style filter.",
+			"name": "CRT Monitor Simulation",
+			"description": "Phosphor scanlines, subtle flicker, and barrel curvature.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"vhs-enabled": {
+			"type": "bool",
+			"name": "VHS Tape Artifacts",
+			"description": "Magnetic tracking distortion and analog tape jitter.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"film-grain-enabled": {
+			"type": "bool",
+			"name": "Cinematic Film Grain",
+			"description": "Organic 35mm film noise texture overlay.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"film-grain-strength": {
+			"type": "float",
+			"name": "Film Grain Strength",
+			"description": "Controls the visibility of the animated film grain overlay.",
+			"default": 0.45,
+			"min": 0.0,
+			"max": 1.0,
+			"control": { "arrows": true, "arrow-step": 0.05, "slider": true, "slider-step": 0.01 },
+			"enable-if": "film-grain-enabled"
+		},
+		"pixelate-enabled": {
+			"type": "bool",
+			"name": "Pixel Art Downscale",
+			"description": "Classic mosaic pixelization effect.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"dithering-enabled": {
+			"type": "bool",
+			"name": "8-Bit Ordered Dithering",
+			"description": "Retro Bayer matrix palette quantization.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"halftone-enabled": {
+			"type": "bool",
+			"name": "Comic Halftone Matrix",
+			"description": "Retro print newspaper dot-matrix rasterization.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"halftone-scale": {
+			"type": "float",
+			"name": "Halftone Dot Density",
+			"default": 45.0,
+			"min": 10.0,
+			"max": 120.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 5.0,
+				"slider": true,
+				"slider-step": 1.0
+			},
+			"enable-if": "halftone-enabled"
+		},
+		"posterize-enabled": {
+			"type": "bool",
+			"name": "Posterize Quantization",
+			"description": "Reduces color gradations to sharp visual color bands.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"posterize-levels": {
+			"type": "float",
+			"name": "Posterize Color Tiers",
+			"default": 6.0,
+			"min": 2.0,
+			"max": 16.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 1.0,
+				"slider": true,
+				"slider-step": 1.0
+			},
+			"enable-if": "posterize-enabled"
+		},
+		"ascii-enabled": {
+			"type": "bool",
+			"name": "ASCII Character Matrix",
+			"description": "Transforms pixels into a live ASCII typography display.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"ascii-scale": {
+			"type": "float",
+			"name": "ASCII Grid Density",
+			"default": 90.0,
+			"min": 20.0,
+			"max": 1200.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 5.0,
+				"slider": true,
+				"slider-step": 1.0
+			},
+			"enable-if": "ascii-enabled"
+		},
+		"neon-enabled": {
+			"type": "bool",
+			"name": "Neon Rainbow Cycle",
+			"description": "Dynamic animated hue cycling pulse.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"neon-speed": {
+			"type": "float",
+			"name": "Rainbow Hue Speed",
+			"default": 1.0,
+			"min": 0.0,
+			"max": 5.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.1,
+				"slider": true,
+				"slider-step": 0.1
+			},
+			"enable-if": "neon-enabled"
+		},
+
+		"title-hdr-sunset": {
+			"type": "title",
+			"name": "Atmospheric Lighting & HDR"
+		},
+		"fake-hdr-enabled": {
+			"type": "bool",
+			"name": "Fake HDR / Dynamic Contrast",
+			"description": "Adaptive dynamic range expansion with ACES tone-curve, micro-detail contrast, and highlight recovery.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"fake-hdr-strength": {
+			"type": "float",
+			"name": "HDR Intensity",
+			"description": "Strength of dynamic range expansion and micro-contrast enhancement.",
+			"default": 0.65,
+			"min": 0.0,
+			"max": 1.5,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.02
+			},
+			"enable-if": "fake-hdr-enabled"
+		},
+		"sunset-enabled": {
+			"type": "bool",
+			"name": "Sunset Atmosphere",
+			"description": "Golden-hour sunset lighting with twilight dusk skies and golden amber highlights.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"sunset-strength": {
+			"type": "float",
+			"name": "Sunset Tint Strength",
+			"description": "Intensity of the golden hour sunset overlay.",
+			"default": 0.75,
+			"min": 0.0,
+			"max": 1.5,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.02
+			},
+			"enable-if": "sunset-enabled"
+		},
+		"title-camera-glass": {
+			"type": "title",
+			"name": "Camera Glass & Film Stock"
+		},
+		"butter-camera-enabled": {
+			"type": "bool",
+			"name": "Butter Camera",
+			"description": "Warm, low-contrast colour grade with lifted blacks and soft creamy tones.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"butter-camera-strength": {
+			"type": "float",
+			"name": "Butter Camera Strength",
+			"description": "Blend amount of the creamy film grade.",
+			"default": 1.0,
+			"min": 0.0,
+			"max": 1.5,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.05
+			},
+			"enable-if": "butter-camera-enabled"
+		},
+		"raindrop-enabled": {
+			"type": "bool",
+			"name": "Raindrop Glass",
+			"description": "Dynamic glass distortion with animated water refraction and wet droplet trails.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"raindrop-strength": {
+			"type": "float",
+			"name": "Raindrop Strength",
+			"description": "Refraction depth of the water droplets.",
+			"default": 0.8,
+			"min": 0.0,
+			"max": 1.5,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.05
+			},
+			"enable-if": "raindrop-enabled"
+		},
+		"film-polaroid-enabled": {
+			"type": "bool",
+			"name": "Film Polaroid",
+			"description": "Vintage analog look with subtle film grain, a warm corner light leak and instant-film edge vignetting.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"film-polaroid-strength": {
+			"type": "float",
+			"name": "Film Polaroid Strength",
+			"description": "Blend amount of the vintage instant-film grade.",
+			"default": 0.85,
+			"min": 0.0,
+			"max": 1.5,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.05
+			},
+			"enable-if": "film-polaroid-enabled"
+		},
+		"fog-enabled": {
+			"type": "bool",
+			"name": "Fog",
+			"description": "Soft atmospheric haze that drifts across the scene and desaturates distant layers.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"fog-strength": {
+			"type": "float",
+			"name": "Fog Density",
+			"description": "How thick the drifting haze banks are.",
+			"default": 0.6,
+			"min": 0.0,
+			"max": 1.5,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.05
+			},
+			"enable-if": "fog-enabled"
+		},
+		"dust-film-enabled": {
+			"type": "bool",
+			"name": "Dust Film",
+			"description": "Dirty camera lens: fingerprint grime, dust specks and lint scattered across the glass.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"dust-film-strength": {
+			"type": "float",
+			"name": "Dust Film Strength",
+			"description": "Amount of lens dirt and scattered light.",
+			"default": 0.7,
+			"min": 0.0,
+			"max": 1.5,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.05
+			},
+			"enable-if": "dust-film-enabled"
+		},
+		"title-custom-shaders": {
+			"type": "title",
+			"name": "Custom GLSL Shaders"
+		},
+		"custom-shader-enabled": {
+			"type": "bool",
+			"name": "Enable Custom GLSL Shader",
+			"description": "Executes your loaded custom shader or custom.glsl from the mod directory.",
+			"default": false,
+			"enable-if": "enable-fun"
+		},
+		"custom-shader-actions": {
+			"type": "button",
+			"name": "Load Custom GLSL File",
+			"buttons": {
+				"load-glsl": "Browse GLSL..."
+			},
+			"enable-if": "enable-fun"
+		},
+
+		"title-optimization": {
+			"type": "title",
+			"name": "GPU Optimization"
+		},
+		"shader-optimization-enabled": {
+			"type": "bool",
+			"name": "Lightweight Shader Passes",
+			"description": "Bypasses expensive multi-sample passes to significantly reduce GPU load on lower-end hardware and mobile devices.",
+			"default": false,
+			"enable-if": "enabled"
+		},
+
+		"title-audio": {
+			"type": "title",
+			"name": "Audio Enhancement & Studio DSP"
+		},
+		"audio-preset": {
+			"type": "string",
+			"name": "Studio Sound Profile",
+			"description": "Master audio reverb and acoustics presets.",
+			"default": "Custom",
+			"one-of": [
+				"Custom",
+				"GDH Reverb",
+				"Spatial",
+				"Cinema",
+				"Clear",
+				"Bass Boost",
+				"Late Night",
+				"Small Room",
+				"Cathedral",
+				"Plate"
+			]
+		},
+		"audio-reverb": {
+			"type": "float",
+			"name": "Reverb Decay Time (ms)",
+			"description": "Acoustic reverberation tail length (up to 5000 ms).",
+			"default": 800.0,
+			"min": 100.0,
+			"max": 5000.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 100.0,
+				"slider": true,
+				"slider-step": 50.0
+			}
+		},
+		"audio-reverb-wet": {
+			"type": "float",
+			"name": "Reverb Wet Mix",
+			"description": "Volume level of the reverberated sound output.",
+			"default": 0.25,
+			"min": 0.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			}
+		},
+		"audio-reverb-dry": {
+			"type": "float",
+			"name": "Reverb Dry Mix",
+			"description": "Volume level of the original unprocessed audio.",
+			"default": 1.0,
+			"min": 0.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			}
+		},
+		"audio-reverb-diffusion": {
+			"type": "float",
+			"name": "Reverb Diffusion",
+			"description": "Echo density of individual room reflections.",
+			"default": 0.7,
+			"min": 0.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			}
+		},
+		"audio-reverb-density": {
+			"type": "float",
+			"name": "Reverb Modal Density",
+			"description": "Coloration modal resonance density across acoustic space.",
+			"default": 1.0,
+			"min": 0.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			}
+		},
+		"audio-reverb-early-delay": {
+			"type": "float",
+			"name": "Reverb Early Delay (ms)",
+			"description": "Pre-delay before initial early reflections arrive.",
+			"default": 20.0,
+			"min": 0.0,
+			"max": 300.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 10.0,
+				"slider": true,
+				"slider-step": 2.0
+			}
+		},
+		"audio-reverb-late-delay": {
+			"type": "float",
+			"name": "Reverb Late Delay (ms)",
+			"description": "Delay time between early reflections and the main diffuse reverb tail.",
+			"default": 40.0,
+			"min": 0.0,
+			"max": 100.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 5.0,
+				"slider": true,
+				"slider-step": 1.0
+			}
+		},
+		"audio-reverb-hf-decay": {
+			"type": "float",
+			"name": "Reverb High-Frequency Damping",
+			"description": "Absorption rate of treble frequencies in the room tail.",
+			"default": 0.5,
+			"min": 0.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			}
+		},
+		"audio-reverb-low-freq": {
+			"type": "float",
+			"name": "Reverb Low-Frequency Reference (Hz)",
+			"description": "Bass crossover frequency for acoustic resonance balance.",
+			"default": 250.0,
+			"min": 20.0,
+			"max": 1000.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 25.0,
+				"slider": true,
+				"slider-step": 5.0
+			}
+		},
+		"audio-muffle": {
+			"type": "float",
+			"name": "Underwater / Muffle Filter",
+			"description": "Dynamic low-pass filter cutoff dampening high frequencies.",
+			"default": 0.0,
+			"min": 0.0,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			}
+		},
+
+		"title-audio-equalizer": {
+			"type": "title",
+			"name": "10-Band Graphic Equalizer (dB)"
+		},
+		"audio-eq-30": {
+			"type": "float",
+			"name": "30 Hz (Sub Bass)",
+			"default": 0.0,
+			"min": -12.0,
+			"max": 12.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.5,
+				"slider": true,
+				"slider-step": 0.1
+			}
+		},
+		"audio-eq-60": {
+			"type": "float",
+			"name": "60 Hz (Bass Kick)",
+			"default": 0.0,
+			"min": -12.0,
+			"max": 12.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.5,
+				"slider": true,
+				"slider-step": 0.1
+			}
+		},
+		"audio-eq-125": {
+			"type": "float",
+			"name": "125 Hz (Low Mid)",
+			"default": 0.0,
+			"min": -12.0,
+			"max": 12.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.5,
+				"slider": true,
+				"slider-step": 0.1
+			}
+		},
+		"audio-eq-250": {
+			"type": "float",
+			"name": "250 Hz (Warmth)",
+			"default": 0.0,
+			"min": -12.0,
+			"max": 12.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.5,
+				"slider": true,
+				"slider-step": 0.1
+			}
+		},
+		"audio-eq-500": {
+			"type": "float",
+			"name": "500 Hz (Midrange)",
+			"default": 0.0,
+			"min": -12.0,
+			"max": 12.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.5,
+				"slider": true,
+				"slider-step": 0.1
+			}
+		},
+		"audio-eq-1000": {
+			"type": "float",
+			"name": "1 kHz (Presence)",
+			"default": 0.0,
+			"min": -12.0,
+			"max": 12.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.5,
+				"slider": true,
+				"slider-step": 0.1
+			}
+		},
+		"audio-eq-2000": {
+			"type": "float",
+			"name": "2 kHz (Clarity)",
+			"default": 0.0,
+			"min": -12.0,
+			"max": 12.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.5,
+				"slider": true,
+				"slider-step": 0.1
+			}
+		},
+		"audio-eq-4000": {
+			"type": "float",
+			"name": "4 kHz (High Mid)",
+			"default": 0.0,
+			"min": -12.0,
+			"max": 12.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.5,
+				"slider": true,
+				"slider-step": 0.1
+			}
+		},
+		"audio-eq-8000": {
+			"type": "float",
+			"name": "8 kHz (Treble Sparkle)",
+			"default": 0.0,
+			"min": -12.0,
+			"max": 12.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.5,
+				"slider": true,
+				"slider-step": 0.1
+			}
+		},
+		"audio-eq-16000": {
+			"type": "float",
+			"name": "16 kHz (Air & Brilliance)",
+			"default": 0.0,
+			"min": -12.0,
+			"max": 12.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.5,
+				"slider": true,
+				"slider-step": 0.1
+			}
+		},
+
+		"title-hacks-gameplay": {
+			"type": "title",
+			"name": "Gameplay Hacks"
+		},
+		"noclip-enabled": {
+			"type": "bool",
+			"name": "Noclip",
+			"description": "Player passes through all obstacles.",
 			"default": false
+		},
+		"noclip-opacity": {
+			"type": "float",
+			"name": "Noclip Opacity",
+			"description": "Player transparency while noclip is active (0 = invisible, 1 = fully visible).",
+			"default": 0.5,
+			"min": 0.0,
+			"max": 1.0,
+			"control": { "arrows": true, "arrow-step": 0.05, "slider": true, "slider-step": 0.01 },
+			"enable-if": "noclip-enabled"
+		},
+		"speedhack-enabled": {
+			"type": "bool",
+			"name": "Speedhack",
+			"description": "Multiply the game's timescale.",
+			"default": false
+		},
+		"speedhack-speed": {
+			"type": "float",
+			"name": "Speed Multiplier",
+			"description": "1.0 = normal speed, 2.0 = double speed, 0.5 = half speed.",
+			"default": 1.0,
+			"min": 0.1,
+			"max": 10.0,
+			"control": { "arrows": true, "arrow-step": 0.1, "slider": true, "slider-step": 0.05 },
+			"enable-if": "speedhack-enabled"
+		},
+		"fps-bypass-enabled": {
+			"type": "bool",
+			"name": "FPS Bypass",
+			"description": "Override the built-in FPS cap.",
+			"default": false
+		},
+		"fps-bypass-value": {
+			"type": "float",
+			"name": "FPS Cap Override",
+			"description": "Target FPS when FPS Bypass is active.",
+			"default": 240.0,
+			"min": 60.0,
+			"max": 1000.0,
+			"control": { "arrows": true, "arrow-step": 10.0, "slider": true, "slider-step": 1.0 },
+			"enable-if": "fps-bypass-enabled"
+		},
+
+		"title-hacks-auto": {
+			"type": "title",
+			"name": "Auto Helpers"
+		},
+		"auto-retry-enabled": {
+			"type": "bool",
+			"name": "Auto-Retry",
+			"description": "Automatically restart the level on death.",
+			"default": false
+		},
+		"auto-retry-delay": {
+			"type": "float",
+			"name": "Retry Delay (sec)",
+			"description": "Time in seconds before auto-retry fires after death.",
+			"default": 0.5,
+			"min": 0.0,
+			"max": 3.0,
+			"control": { "arrows": true, "arrow-step": 0.1, "slider": true, "slider-step": 0.05 },
+			"enable-if": "auto-retry-enabled"
+		},
+		"practice-music-hack": {
+			"type": "bool",
+			"name": "Practice Music Hack",
+			"description": "Keep the music playing in practice mode.",
+			"default": false
+		},
+		"respawn-delay": {
+			"type": "float",
+			"name": "Respawn Delay (sec)",
+			"description": "Delay before respawning at a checkpoint in practice mode.",
+			"default": 0.5,
+			"min": 0.0,
+			"max": 3.0,
+			"control": { "arrows": true, "arrow-step": 0.1, "slider": true, "slider-step": 0.05 }
+		},
+
+		"title-hacks-hud": {
+			"type": "title",
+			"name": "HUD & Display"
+		},
+		"show-percentage": {
+			"type": "bool",
+			"name": "Show Percentage",
+			"description": "Overlay completion % during gameplay.",
+			"default": false
+		},
+		"hide-attempts": {
+			"type": "bool",
+			"name": "Hide Attempts Counter",
+			"description": "Hide the attempt number label.",
+			"default": false
+		},
+
+		"title-hacks-visual": {
+			"type": "title",
+			"name": "Visual Cheats"
+		},
+		"hitbox-enabled": {
+			"type": "bool",
+			"name": "Show Hitboxes",
+			"description": "Draw colored hitboxes around objects and the player.",
+			"default": false
+		},
+		"hitbox-solid": {
+			"type": "bool",
+			"name": "Solid Hitboxes",
+			"description": "Fill hitboxes with color instead of outline-only.",
+			"default": false,
+			"enable-if": "hitbox-enabled"
+		},
+		"trail-enabled": {
+			"type": "bool",
+			"name": "Player Trail",
+			"description": "Toggle the player's movement trail.",
+			"default": true
+		},
+		"layout-mode": {
+			"type": "bool",
+			"name": "Layout Mode",
+			"description": "Hide all background textures for a clean speedrun layout view.",
+			"default": false
+		},
+		"mirror-mode": {
+			"type": "bool",
+			"name": "Mirror Mode",
+			"description": "Flip the game horizontally.",
+			"default": false
+		},
+
+		"title-hacks-anticheat": {
+			"type": "title",
+			"name": "Anti-Cheat"
+		},
+		"anticheat-bypass": {
+			"type": "bool",
+			"name": "Anti-Cheat Bypass",
+			"description": "WARNING: Disables GD's cheat detection. Score submission will be blocked while active.",
+			"default": false
+		},
+
+		"start-pos-enabled": {
+			"type": "bool",
+			"name": "Custom Start Position",
+			"description": "Jump to a specific checkpoint percentage when the level loads.",
+			"default": false
+		},
+		"start-pos-percent": {
+			"type": "float",
+			"name": "Start at %",
+			"description": "Level completion percentage to start from.",
+			"default": 0.0,
+			"min": 0.0,
+			"max": 100.0,
+			"control": { "arrows": true, "arrow-step": 1.0, "slider": true, "slider-step": 0.5 },
+			"enable-if": "start-pos-enabled"
 		}
 	}
 }

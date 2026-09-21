@@ -15,11 +15,14 @@ uniform vec2 u_invResolution;
 uniform float u_threshold;
 
 vec3 brightPass(vec3 color) {
-    return clamp(
-        (color - vec3(u_threshold)) / max(1.0 - u_threshold, 0.001),
-        vec3(0.0),
-        vec3(1.0)
-    );
+    float brightness = max(color.r, max(color.g, color.b));
+    float knee = max(0.5 * (1.0 - u_threshold), 0.001);
+    float soft = brightness - u_threshold + knee;
+    soft = clamp(soft, 0.0, 2.0 * knee);
+    soft = (soft * soft) / (4.0 * knee + 0.00001);
+    float contribution = max(soft, brightness - u_threshold);
+    contribution /= max(brightness, 0.00001);
+    return color * clamp(contribution, 0.0, 1.0);
 }
 
 void main() {
@@ -55,12 +58,17 @@ void main() {
 uniform sampler2D u_source;
 uniform sampler2D u_bloom;
 uniform float u_intensity;
+uniform float u_adaptive;
 varying vec2 v_texCoord;
 
 void main() {
     vec4 source = texture2D(u_source, v_texCoord);
     vec3 bloom = texture2D(u_bloom, v_texCoord).rgb;
-    gl_FragColor = vec4(clamp(source.rgb + bloom * u_intensity, 0.0, 1.0), source.a);
+    // Measure the extracted bloom itself, not the dark pixel currently being
+    // composited. This keeps light halos visible around bright sources.
+    float bloomLuminance = dot(bloom, vec3(0.299, 0.587, 0.114));
+    float lightResponse = mix(1.0, mix(0.35, 1.0, smoothstep(0.01, 0.35, bloomLuminance)), u_adaptive);
+    gl_FragColor = vec4(clamp(source.rgb + bloom * u_intensity * lightResponse, 0.0, 1.0), source.a);
 }
 )glsl";
 

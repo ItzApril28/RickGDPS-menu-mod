@@ -15,7 +15,7 @@ namespace bv::render {
 
         bool prepare(GLsizei width, GLsizei height);
         void apply(GLuint inputTexture, RenderTarget const& target);
-        void setParams(GLfloat threshold, GLfloat intensity, GLfloat radius);
+        void setParams(GLfloat threshold, GLfloat intensity, GLfloat radius, bool adaptive = false);
         void reset();
 
     private:
@@ -23,6 +23,7 @@ namespace bv::render {
             GLuint handle = 0;
             GLint offset = -1;
             GLint param = -1;
+            GLint adaptive = -1;
         };
 
         bool initialize();
@@ -42,6 +43,7 @@ namespace bv::render {
         GLfloat m_blurStepY = 0.f;
         GLfloat m_threshold = 0.7f;
         GLfloat m_intensity = 0.3f;
+        GLfloat m_adaptive = 0.f;
         GLfloat m_radiusAt1080p = 8.f;
     };
 

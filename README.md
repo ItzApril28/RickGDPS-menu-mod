@@ -1,76 +1,44 @@
-# Better Visuals and FPS
+# BetterVisual and Audio
 
-More FPS or better visuals, up to you!
+BetterVisual and Audio is an unofficial fork of [BetterVisuals by ItMe12s](https://github.com/ItMe12s/BetterVisuals/). It keeps the original rendering and performance tools while expanding the collection of fullscreen visual effects and presets.
 
-Mod only works in levels and the editor, change settings in the pause menu.
+The mod works in levels and the editor. Configure it through Geode's mod settings or the pause-menu settings shortcut.
 
-**Also known as:** Less Jagged Edges, Super Secret Settings.
+## Credits and fork status
 
-Recommended settings:
+- Original project: [BetterVisuals](https://github.com/ItMe12s/BetterVisuals/) by ItMe12s
+- This fork: BetterVisual and Audio by ItzApril28
+- Framebuffer and VBO handling references: [Geode DevTools](https://github.com/geode-sdk/DevTools)
 
-- `Max FPS`: 0.5x + Nearest, AA off, Sharpening off.
-- `Better FPS`: 0.7x + FSR 1, AA off, Sharpening off.
-- `Better Visuals`: 1x, SMAA High, Sharpening off.
-- `Stream/Record`: 1x, SMAA High, Sharpening on.
-- `YT Showcase`: 1x, SMAA Ultra, Sharpening on.
+This repository is a forked and customized version, not an official BetterVisuals release.
 
-*May distort text and UI elements.*
+## Performance
 
-## Render Scale
+Fullscreen post-processing can reduce frame rate, especially on mobile and lower-end devices. Use fewer simultaneous effects, lower render scale, or reduce effect strength if gameplay becomes slow.
 
-Render the game at lower resolution for faster rendering then upscale it.
+Recommended baseline configurations:
 
-Available methods:
+- **Max FPS:** 0.5x render scale, Nearest upscaling, AA off, sharpening off.
+- **Better FPS:** 0.7x render scale, FSR 1, AA off, sharpening off.
+- **Better Visuals:** 1x render scale, SMAA High, sharpening off.
 
-- Nearest neighbour
-- AMD FidelityFX FSR 1 (EASU)
+## Rendering tools
 
-Nearest neighbour is the fastest.
-FSR 1 produces sharper edges while upscaling with a small performance cost.
+- Render scale with Nearest-neighbour or AMD FidelityFX FSR 1 upscaling
+- FXAA, SMAA High, and SMAA Ultra anti-aliasing
+- Bloom (with Dynamic Bloom automation) and ten bloom presets
+- Parallax shader and Split Screen view modes (Horizontal, Vertical, Quad 2x2)
+- Animated LUT transitions and color tonemapping
+- Handheld camera wobble & shake, God Rays, film grain, lens flare glow, motion blur, and ambient aurora
+- Chromatic aberration, neon pulse, radial blur, vignette, halftone, CRT, VHS, dithering, grayscale, and ASCII
+- Combined theme presets and custom GLSL shader loading
 
-## Anti-aliasing
+Some effects may distort text and UI elements because they are applied to the full scene.
 
-Makes the game look better while playing levels.
+## Custom GLSL shaders
 
-Available methods:
+The **Custom GLSL Shader** setting loads `custom.glsl` from the mod's Geode persistent folder. The fragment shader must declare `u_texture`, `u_invResolution`, and `v_texCoord`, and must write `gl_FragColor`. The built-in fullscreen vertex shader is supplied automatically.
 
-- FXAA
-- SMAA High (default)
-- SMAA Ultra
+## Licenses and sources
 
-FXAA is the fastest. SMAA High offers better image quality with a small (unnoticeable) performance cost.
-SMAA Ultra is overkill unless you play or record at very low or very high resolutions (such as 720p or 4K) on a large screen.
-
-## AMD FidelityFX CAS
-
-A fast, high-quality sharpening method that improves image clarity.
-It may also improve the appearance of streams and showcase videos at low to medium bitrates.
-
-## Fun stuff
-
-Extra shaders you can mix and customize:
-
-- Bloom
-- Grayscale
-- Pixelate
-- Dithering Filter
-- VHS Filter
-- CRT Filter
-
-*These may cause lag on mobile or low-end devices.*
-
-## Want more AA methods and shaders?
-
-Join the Discord server or open a GitHub issue/feature request!
-
-Framebuffer and VBO handling referenced from [DevTools](https://github.com/geode-sdk/DevTools).
-
-Other credits, citations, and licenses can be found in the mod's source code
-
-## Quotes I got while making the mod
-
-"Finally I can play at 1000 FPS (I use a 200Hz screen)"
-
-"works perfectly thanks !! /Unlisted YouTube GD showcase/"
-
-"No phone overheat after the upscale update"
+Shader-specific credits, citations, and licenses are included in the source files where applicable. See the original [BetterVisuals repository](https://github.com/ItMe12s/BetterVisuals/) for its upstream project information.

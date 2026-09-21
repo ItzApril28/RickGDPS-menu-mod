@@ -329,6 +329,7 @@ vec2 SMAACalculateDiagWeights(sampler2D edgesTex, sampler2D areaTex, vec2 texcoo
         d.y += end.y > 0.9 ? 1.0 : 0.0;
     } else
         d.yw = vec2(0.0, 0.0);
+    )glsl" R"glsl(
 
     if (d.x + d.y > 2.0) { // d.x + d.y + 1 > 3
         // Fetch the crossing edges:

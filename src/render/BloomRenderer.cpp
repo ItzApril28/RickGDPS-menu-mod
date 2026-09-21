@@ -82,7 +82,8 @@ namespace bv::render {
 
         m_programs[0].param = glGetUniformLocation(m_programs[0].handle, "u_threshold");
         m_programs[2].param = glGetUniformLocation(m_programs[2].handle, "u_intensity");
-        if (m_programs[0].param < 0 || m_programs[2].param < 0) {
+        m_programs[2].adaptive = glGetUniformLocation(m_programs[2].handle, "u_adaptive");
+        if (m_programs[0].param < 0 || m_programs[2].param < 0 || m_programs[2].adaptive < 0) {
             log::error("Bloom shaders are missing required parameter uniforms");
             destroyResources();
             return false;
@@ -156,9 +157,10 @@ namespace bv::render {
             (kBlurKernelRadius * static_cast<GLfloat>(m_height)) * kBlurWideStep;
     }
 
-    void BloomRenderer::setParams(GLfloat threshold, GLfloat intensity, GLfloat radius) {
+    void BloomRenderer::setParams(GLfloat threshold, GLfloat intensity, GLfloat radius, bool adaptive) {
         m_threshold = threshold;
         m_intensity = intensity;
+        m_adaptive = adaptive ? 1.f : 0.f;
         m_radiusAt1080p = radius;
         updateBlurStep();
     }
@@ -166,6 +168,12 @@ namespace bv::render {
     void BloomRenderer::apply(GLuint inputTexture, RenderTarget const& target) {
         assert(m_programs[0].handle != 0 && inputTexture != 0);
 
+        // Bloom owns the full target. Never inherit the game's clipping or
+        // blend state, which can otherwise make its passes appear invisible.
+        glDisable(GL_BLEND);
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_CULL_FACE);
         glActiveTexture(GL_TEXTURE0);
         glViewport(0, 0, m_halfWidth, m_halfHeight);
         glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffers[0]);
@@ -189,6 +197,7 @@ namespace bv::render {
         glViewport(target.x, target.y, target.width, target.height);
         glUseProgram(m_programs[2].handle);
         glUniform1f(m_programs[2].param, m_intensity);
+        glUniform1f(m_programs[2].adaptive, m_adaptive);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, inputTexture);
         glActiveTexture(GL_TEXTURE1);
