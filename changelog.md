@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased
+## Small Patch 1.4.6-beta 1
+
+### Audio Quality Overhaul & New Features
+- **8D Audio Effect**: Immersive 3D audio mode that smoothly rotates audio from left to right around the listener's head with a subtle hint of room reverb and distance modeling, recreating the popular 8D music effect from YouTube.
+- **Reverb Overhaul**: Replaced the complex multi-parameter reverb setup with a single, clean **Reverb Strength** slider (in ms, 0 to 10000 ms). Internally balances wet/dry, diffusion, density, and reflections for pristine acoustics without clutter.
+- **Equalizer Bass Distortion Fix**: Refined the parametric EQ filter curve (widened bandwidth Q from 1.0 to 0.6) and clamped sub-bass bands (30 Hz and 60 Hz to ±6 dB, others to ±9 dB) to eliminate clipping, resonance overshoots, and bass distortion.
+- **Audio Filter Presets**: Added 12 handcrafted creative sound filters:
+  - **Telephone**, **Underwater**, **Lo-Fi Tape**, **Vintage Radio**, **Megaphone**, **Stadium**, **Bedroom Studio**, **Concert Hall**, **Dark Room**, **Bright & Airy**, **Warm Tube**, and **Space Echo**.
 
 ### v1.4.6 — Camera Glass & Film Stock
 

@@ -13,6 +13,7 @@
 #include <Geode/utils/file.hpp>
 #include <Geode/loader/SettingV3.hpp>
 #include <Geode/modify/CCDirector.hpp>
+#include <Geode/modify/FMODAudioEngine.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/MenuLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
@@ -250,17 +251,12 @@ namespace {
     bv::render::PostProcessShader g_customShader{
         "Custom GLSL", bv::shaders::kFullscreenVertexSource, {}, nullptr
     };
-    std::atomic<float> g_audioReverb = 800.f;
-    std::atomic<float> g_audioReverbWet = 0.25f;
-    std::atomic<float> g_audioReverbDry = 1.f;
-    std::atomic<float> g_audioReverbDiffusion = 0.7f;
-    std::atomic<float> g_audioReverbDensity = 1.0f;
-    std::atomic<float> g_audioReverbEarlyDelay = 20.0f;
-    std::atomic<float> g_audioReverbLateDelay = 40.0f;
-    std::atomic<float> g_audioReverbHfDecay = 0.5f;
-    std::atomic<float> g_audioReverbLowFreq = 250.0f;
+    std::atomic<float> g_audioReverb = 0.f;
     std::atomic<float> g_audioMuffle = 0.f;
     std::atomic<int> g_audioPreset = 0;
+    std::atomic<int> g_audioFilter = 0;
+    std::atomic<bool> g_audio8DEnabled = false;
+    std::atomic<float> g_audio8DSpeed = 0.15f;
     constexpr std::array<float, 10> kAudioEqFrequencies{30.f, 60.f, 125.f, 250.f, 500.f, 1000.f, 2000.f, 4000.f, 8000.f, 16000.f};
     std::array<std::atomic<float>, kAudioEqFrequencies.size()> g_audioEqBands{};
     FMOD::DSP* g_audioReverbDsp = nullptr;
@@ -517,6 +513,61 @@ namespace {
         g_audioPreset.store(0, std::memory_order_relaxed);
     }
 
+    void updateAudioFilter(std::string_view value) {
+        constexpr std::array names{
+            "None", "Telephone", "Underwater", "Lo-Fi Tape", "Vintage Radio",
+            "Megaphone", "Stadium", "Bedroom Studio", "Concert Hall",
+            "Dark Room", "Bright & Airy", "Warm Tube", "Space Echo"
+        };
+        for (std::size_t i = 0; i < names.size(); ++i) {
+            if (value == names[i]) {
+                g_audioFilter.store(static_cast<int>(i), std::memory_order_relaxed);
+                return;
+            }
+        }
+        g_audioFilter.store(0, std::memory_order_relaxed);
+    }
+
+    void update8DAudio(float dt) {
+        static float s_8dPhase = 0.0f;
+        static bool s_was8dActive = false;
+
+        bool enabled = g_audio8DEnabled.load(std::memory_order_relaxed);
+        if (!enabled) {
+            if (s_was8dActive) {
+                s_was8dActive = false;
+                s_8dPhase = 0.0f;
+                auto* engine = FMODAudioEngine::get();
+                if (engine && engine->m_system) {
+                    FMOD::ChannelGroup* masterGroup = nullptr;
+                    if (engine->m_system->getMasterChannelGroup(&masterGroup) == FMOD_OK && masterGroup) {
+                        masterGroup->setPan(0.0f);
+                    }
+                }
+            }
+            return;
+        }
+
+        s_was8dActive = true;
+        float speed = g_audio8DSpeed.load(std::memory_order_relaxed);
+        if (speed <= 0.0f) speed = 0.15f;
+
+        constexpr float kTwoPi = 6.28318530717958647692f;
+        s_8dPhase += dt * speed * kTwoPi;
+        if (s_8dPhase > kTwoPi) s_8dPhase = std::fmod(s_8dPhase, kTwoPi);
+
+        // Sinusoidal pan shifts smoothly Left (-1.0) to Right (+1.0)
+        float pan = std::sin(s_8dPhase);
+
+        auto* engine = FMODAudioEngine::get();
+        if (!engine || !engine->m_system) return;
+
+        FMOD::ChannelGroup* masterGroup = nullptr;
+        if (engine->m_system->getMasterChannelGroup(&masterGroup) != FMOD_OK || !masterGroup) return;
+
+        masterGroup->setPan(pan);
+    }
+
     void applyAudioEffects() {
         auto* engine = FMODAudioEngine::get();
         if (!engine || !engine->m_system) return;
@@ -550,40 +601,36 @@ namespace {
         }
 
         float reverbMs = g_audioReverb.load(std::memory_order_relaxed);
-        float reverb = std::clamp(reverbMs / 5000.f, 0.f, 1.f);
         float muffle = g_audioMuffle.load(std::memory_order_relaxed);
         std::array<float, kAudioEqFrequencies.size()> gains{};
         for (std::size_t i = 0; i < gains.size(); ++i) gains[i] = g_audioEqBands[i].load(std::memory_order_relaxed);
+
+        // Sound profile preset
         switch (g_audioPreset.load(std::memory_order_relaxed)) {
-            case 1: { // GDH Reverb â€” exact copy of GDH's reverb effect
-                // GDH only sets DECAYTIME on the SFXREVERB DSP (default 10000ms).
-                // It does NOT touch wet/dry/diffusion/density/EQ â€” FMOD defaults apply.
-                // We replicate that: decay in ms, FMOD default wet=0dB dry=0dB diff=100 dens=100
-                reverbMs = g_audioReverb.load(std::memory_order_relaxed);
-                if (reverbMs < 100.f) reverbMs = 10000.f; // GDH default slider value
+            case 1: { // GDH Reverb
+                if (reverbMs < 100.f) reverbMs = 10000.f;
                 reverbMs = std::clamp(reverbMs, 100.f, 20000.f);
                 muffle = 0.f;
                 gains = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
-                // Override reverb DSP params to match GDH (FMOD defaults)
                 g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DECAYTIME, reverbMs / 1000.f);
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_WETLEVEL, 0.f);   // FMOD default
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DRYLEVEL, 0.f);   // FMOD default
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DIFFUSION, 100.f); // FMOD default
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DENSITY, 100.f);   // FMOD default
+                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_WETLEVEL, 0.f);
+                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DRYLEVEL, 0.f);
+                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DIFFUSION, 100.f);
+                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DENSITY, 100.f);
                 g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_EARLYDELAY, 20.f);
                 g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_LATEDELAY, 40.f);
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_HFDECAYRATIO, 50.f); // FMOD default
+                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_HFDECAYRATIO, 50.f);
                 g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_LOWSHELFFREQUENCY, 250.f);
                 g_audioReverbDsp->setBypass(false);
                 g_audioMuffleDsp->setBypass(false);
                 g_audioMuffleDsp->setParameterFloat(FMOD_DSP_LOWPASS_CUTOFF, 22000.f);
                 for (std::size_t i = 0; i < g_audioEqDsps.size(); ++i) {
                     g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_CENTER, kAudioEqFrequencies[i]);
-                    g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_BANDWIDTH, 1.f);
+                    g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_BANDWIDTH, 0.6f);
                     g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_GAIN, 0.f);
-                    g_audioEqDsps[i]->setBypass(false);
+                    g_audioEqDsps[i]->setBypass(true);
                 }
-                return; // Skip the common reverb/EQ path below â€” we set everything directly
+                return;
             }
             case 2: // Spatial
                 reverbMs = 1750.f; gains = {1.f, 1.f, 0.f, 0.f, -1.f, 0.f, 1.f, 2.f, 2.f, 1.f}; break;
@@ -603,23 +650,114 @@ namespace {
                 reverbMs = 2200.f; gains = {1.f, 1.f, 0.f, 0.f, 0.f, 1.f, 2.f, 2.f, 1.f, 0.f}; break;
             default: break;
         }
-        g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DECAYTIME, std::max(0.1f, reverbMs / 1000.f));
-        g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_WETLEVEL, -24.f + g_audioReverbWet.load(std::memory_order_relaxed) * 24.f);
-        g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DRYLEVEL, -6.f + g_audioReverbDry.load(std::memory_order_relaxed) * 6.f);
-        g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DIFFUSION, g_audioReverbDiffusion.load(std::memory_order_relaxed) * 100.f);
-        g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DENSITY, g_audioReverbDensity.load(std::memory_order_relaxed) * 100.f);
-        g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_EARLYDELAY, g_audioReverbEarlyDelay.load(std::memory_order_relaxed));
-        g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_LATEDELAY, g_audioReverbLateDelay.load(std::memory_order_relaxed));
-        g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_HFDECAYRATIO, g_audioReverbHfDecay.load(std::memory_order_relaxed));
-        g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_LOWSHELFFREQUENCY, g_audioReverbLowFreq.load(std::memory_order_relaxed));
-        g_audioReverbDsp->setBypass(false);
-        g_audioMuffleDsp->setBypass(false);
-        g_audioMuffleDsp->setParameterFloat(FMOD_DSP_LOWPASS_CUTOFF, 22000.f - muffle * 20500.f);
+
+        // Apply Audio Filter preset
+        switch (g_audioFilter.load(std::memory_order_relaxed)) {
+            case 1: // Telephone
+                muffle = std::max(muffle, 0.55f);
+                gains[0] -= 6.f; gains[1] -= 6.f; gains[2] -= 4.f;
+                gains[5] += 4.f; gains[6] += 5.f;
+                gains[8] -= 9.f; gains[9] -= 9.f;
+                break;
+            case 2: // Underwater
+                muffle = std::max(muffle, 0.85f);
+                gains[1] += 3.f; gains[2] += 2.f;
+                if (reverbMs < 1200.f) reverbMs = 1200.f;
+                break;
+            case 3: // Lo-Fi Tape
+                muffle = std::max(muffle, 0.22f);
+                gains[2] += 2.5f; gains[3] += 1.5f;
+                gains[8] -= 4.f; gains[9] -= 6.f;
+                if (reverbMs < 350.f) reverbMs = 350.f;
+                break;
+            case 4: // Vintage Radio
+                muffle = std::max(muffle, 0.35f);
+                gains[0] -= 6.f; gains[1] -= 5.f;
+                gains[4] += 2.f; gains[5] += 4.f; gains[6] += 3.f;
+                gains[8] -= 4.f; gains[9] -= 8.f;
+                break;
+            case 5: // Megaphone
+                muffle = std::max(muffle, 0.25f);
+                gains[0] -= 6.f; gains[1] -= 6.f; gains[2] -= 3.f;
+                gains[5] += 6.f; gains[6] += 6.f; gains[7] += 3.f;
+                gains[8] -= 6.f; gains[9] -= 6.f;
+                break;
+            case 6: // Stadium
+                if (reverbMs < 3800.f) reverbMs = 3800.f;
+                gains[1] += 3.f; gains[8] += 2.f; gains[9] += 1.f;
+                break;
+            case 7: // Bedroom Studio
+                if (reverbMs < 450.f) reverbMs = 450.f;
+                gains[2] += 1.5f; gains[3] += 1.f;
+                break;
+            case 8: // Concert Hall
+                if (reverbMs < 2600.f) reverbMs = 2600.f;
+                gains[2] += 1.5f; gains[3] += 1.f; gains[8] += 1.5f;
+                break;
+            case 9: // Dark Room
+                muffle = std::max(muffle, 0.40f);
+                gains[1] += 4.f; gains[2] += 2.f;
+                gains[8] -= 6.f; gains[9] -= 9.f;
+                if (reverbMs < 1800.f) reverbMs = 1800.f;
+                break;
+            case 10: // Bright & Airy
+                gains[7] += 2.f; gains[8] += 4.f; gains[9] += 5.f;
+                break;
+            case 11: // Warm Tube
+                gains[1] += 2.f; gains[2] += 3.f; gains[3] += 2.f;
+                gains[8] -= 1.f; gains[9] -= 2.f;
+                break;
+            case 12: // Space Echo
+                if (reverbMs < 5500.f) reverbMs = 5500.f;
+                gains[7] += 2.f; gains[8] += 3.f;
+                muffle = std::max(muffle, 0.1f);
+                break;
+            default: break;
+        }
+
+        // 8D Audio hint of reverb check
+        bool is8D = g_audio8DEnabled.load(std::memory_order_relaxed);
+        if (is8D && reverbMs < 500.f) {
+            reverbMs = 500.f; // subtle hint of room reverb for binaural 8D effect
+        }
+
+        // Configure Reverb DSP
+        if (reverbMs <= 10.f) {
+            g_audioReverbDsp->setBypass(true);
+        } else {
+            g_audioReverbDsp->setBypass(false);
+            g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DECAYTIME, std::max(0.1f, reverbMs / 1000.f));
+            float wetLevel = (is8D && g_audioReverb.load(std::memory_order_relaxed) < 100.f) ? -16.f : -12.f;
+            g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_WETLEVEL, wetLevel);
+            g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DRYLEVEL, 0.f);
+            g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DIFFUSION, 85.f);
+            g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DENSITY, 85.f);
+            g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_EARLYDELAY, 15.f);
+            g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_LATEDELAY, 30.f);
+            g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_HFDECAYRATIO, 60.f);
+            g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_LOWSHELFFREQUENCY, 250.f);
+        }
+
+        // Configure Lowpass / Muffle DSP
+        if (muffle <= 0.001f) {
+            g_audioMuffleDsp->setBypass(true);
+        } else {
+            g_audioMuffleDsp->setBypass(false);
+            g_audioMuffleDsp->setParameterFloat(FMOD_DSP_LOWPASS_CUTOFF, 22000.f - muffle * 20500.f);
+        }
+
+        // Configure Parametric EQ with widened bandwidth (0.6f) and safe clamping
         for (std::size_t i = 0; i < g_audioEqDsps.size(); ++i) {
+            float gain = gains[i];
+            if (i == 0 || i == 1) { // 30 Hz and 60 Hz bass bands
+                gain = std::clamp(gain, -6.f, 6.f);
+            } else {
+                gain = std::clamp(gain, -9.f, 9.f);
+            }
             g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_CENTER, kAudioEqFrequencies[i]);
-            g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_BANDWIDTH, 1.f);
-            g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_GAIN, gains[i]);
-            g_audioEqDsps[i]->setBypass(false);
+            g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_BANDWIDTH, 0.6f);
+            g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_GAIN, gain);
+            g_audioEqDsps[i]->setBypass(std::abs(gain) < 0.01f);
         }
     }
 
@@ -627,6 +765,14 @@ namespace {
         value.store(Mod::get()->getSettingValue<bool>(name), std::memory_order_relaxed);
         listenForSettingChanges<bool>(name, [&value](bool updated) {
             value.store(updated, std::memory_order_relaxed);
+        });
+    }
+
+    void bindAudioBoolSetting(char const* name, std::atomic<bool>& value) {
+        value.store(Mod::get()->getSettingValue<bool>(name), std::memory_order_relaxed);
+        listenForSettingChanges<bool>(name, [&value](bool updated) {
+            value.store(updated, std::memory_order_relaxed);
+            applyAudioEffects();
         });
     }
 
@@ -1454,15 +1600,10 @@ $on_mod(Loaded) {
             Notification::create("Custom GLSL shader loaded", NotificationIcon::Success, 1.5f)->show();
         });
     }).leak();
+    bindAudioBoolSetting("audio-8d", g_audio8DEnabled);
+    bindDoubleSetting("audio-8d-speed", g_audio8DSpeed);
+    bindStringSetting("audio-filter", updateAudioFilter);
     bindDoubleSetting("audio-reverb", g_audioReverb);
-    bindDoubleSetting("audio-reverb-wet", g_audioReverbWet);
-    bindDoubleSetting("audio-reverb-dry", g_audioReverbDry);
-    bindDoubleSetting("audio-reverb-diffusion", g_audioReverbDiffusion);
-    bindDoubleSetting("audio-reverb-density", g_audioReverbDensity);
-    bindDoubleSetting("audio-reverb-early-delay", g_audioReverbEarlyDelay);
-    bindDoubleSetting("audio-reverb-late-delay", g_audioReverbLateDelay);
-    bindDoubleSetting("audio-reverb-hf-decay", g_audioReverbHfDecay);
-    bindDoubleSetting("audio-reverb-low-freq", g_audioReverbLowFreq);
     bindDoubleSetting("audio-muffle", g_audioMuffle);
     bindAudioEqBand("audio-eq-30", 0);
     bindAudioEqBand("audio-eq-60", 1);
@@ -1479,6 +1620,13 @@ $on_mod(Loaded) {
     bindStringSetting("effect-preset", updateEffectPreset);
     bindStringSetting("performance-preset", updatePerformancePreset);
 }
+
+class $modify(BetterVisualsAudioEngineHook, FMODAudioEngine) {
+    void update(float dt) {
+        FMODAudioEngine::update(dt);
+        update8DAudio(dt);
+    }
+};
 
 class $modify(BetterVisualsDirectorHook, CCDirector) {
     void drawScene() {

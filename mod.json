@@ -8,7 +8,7 @@
 	},
 	"id": "itzapril28.bettervisual-and-audio",
 	"name": "RickGdps Menu Mod",
-	"version": "v1.4.6",
+	"version": "v1.4.6-beta.1",
 	"early-load": true,
 	"load-priority": -4000,
 	"developer": "RickGdps",
@@ -1020,128 +1020,16 @@
 		},
 		"audio-reverb": {
 			"type": "float",
-			"name": "Reverb Decay Time (ms)",
-			"description": "Acoustic reverberation tail length (up to 5000 ms).",
-			"default": 800.0,
-			"min": 100.0,
-			"max": 5000.0,
+			"name": "Reverb Strength (ms)",
+			"description": "Room reverb tail length in milliseconds (0 = off, up to 10000 ms).",
+			"default": 0.0,
+			"min": 0.0,
+			"max": 10000.0,
 			"control": {
 				"arrows": true,
 				"arrow-step": 100.0,
 				"slider": true,
 				"slider-step": 50.0
-			}
-		},
-		"audio-reverb-wet": {
-			"type": "float",
-			"name": "Reverb Wet Mix",
-			"description": "Volume level of the reverberated sound output.",
-			"default": 0.25,
-			"min": 0.0,
-			"max": 1.0,
-			"control": {
-				"arrows": true,
-				"arrow-step": 0.05,
-				"slider": true,
-				"slider-step": 0.01
-			}
-		},
-		"audio-reverb-dry": {
-			"type": "float",
-			"name": "Reverb Dry Mix",
-			"description": "Volume level of the original unprocessed audio.",
-			"default": 1.0,
-			"min": 0.0,
-			"max": 1.0,
-			"control": {
-				"arrows": true,
-				"arrow-step": 0.05,
-				"slider": true,
-				"slider-step": 0.01
-			}
-		},
-		"audio-reverb-diffusion": {
-			"type": "float",
-			"name": "Reverb Diffusion",
-			"description": "Echo density of individual room reflections.",
-			"default": 0.7,
-			"min": 0.0,
-			"max": 1.0,
-			"control": {
-				"arrows": true,
-				"arrow-step": 0.05,
-				"slider": true,
-				"slider-step": 0.01
-			}
-		},
-		"audio-reverb-density": {
-			"type": "float",
-			"name": "Reverb Modal Density",
-			"description": "Coloration modal resonance density across acoustic space.",
-			"default": 1.0,
-			"min": 0.0,
-			"max": 1.0,
-			"control": {
-				"arrows": true,
-				"arrow-step": 0.05,
-				"slider": true,
-				"slider-step": 0.01
-			}
-		},
-		"audio-reverb-early-delay": {
-			"type": "float",
-			"name": "Reverb Early Delay (ms)",
-			"description": "Pre-delay before initial early reflections arrive.",
-			"default": 20.0,
-			"min": 0.0,
-			"max": 300.0,
-			"control": {
-				"arrows": true,
-				"arrow-step": 10.0,
-				"slider": true,
-				"slider-step": 2.0
-			}
-		},
-		"audio-reverb-late-delay": {
-			"type": "float",
-			"name": "Reverb Late Delay (ms)",
-			"description": "Delay time between early reflections and the main diffuse reverb tail.",
-			"default": 40.0,
-			"min": 0.0,
-			"max": 100.0,
-			"control": {
-				"arrows": true,
-				"arrow-step": 5.0,
-				"slider": true,
-				"slider-step": 1.0
-			}
-		},
-		"audio-reverb-hf-decay": {
-			"type": "float",
-			"name": "Reverb High-Frequency Damping",
-			"description": "Absorption rate of treble frequencies in the room tail.",
-			"default": 0.5,
-			"min": 0.0,
-			"max": 1.0,
-			"control": {
-				"arrows": true,
-				"arrow-step": 0.05,
-				"slider": true,
-				"slider-step": 0.01
-			}
-		},
-		"audio-reverb-low-freq": {
-			"type": "float",
-			"name": "Reverb Low-Frequency Reference (Hz)",
-			"description": "Bass crossover frequency for acoustic resonance balance.",
-			"default": 250.0,
-			"min": 20.0,
-			"max": 1000.0,
-			"control": {
-				"arrows": true,
-				"arrow-step": 25.0,
-				"slider": true,
-				"slider-step": 5.0
 			}
 		},
 		"audio-muffle": {
@@ -1159,6 +1047,58 @@
 			}
 		},
 
+		"title-audio-8d": {
+			"type": "title",
+			"name": "8D Audio"
+		},
+		"audio-8d": {
+			"type": "bool",
+			"name": "8D Audio Effect",
+			"description": "Smooth left-to-right binaural rotation around your head with a hint of reverb, like 8D audio on YouTube.",
+			"default": false
+		},
+		"audio-8d-speed": {
+			"type": "float",
+			"name": "8D Rotation Speed (Hz)",
+			"description": "Speed of 360-degree audio rotation (0.15 Hz = ~7 seconds per full cycle).",
+			"default": 0.15,
+			"min": 0.05,
+			"max": 0.50,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.02,
+				"slider": true,
+				"slider-step": 0.01
+			},
+			"enable-if": "audio-8d"
+		},
+
+		"title-audio-filter": {
+			"type": "title",
+			"name": "Audio Filters"
+		},
+		"audio-filter": {
+			"type": "string",
+			"name": "Audio Filter",
+			"description": "Creative DSP filter preset applied to the audio output.",
+			"default": "None",
+			"one-of": [
+				"None",
+				"Telephone",
+				"Underwater",
+				"Lo-Fi Tape",
+				"Vintage Radio",
+				"Megaphone",
+				"Stadium",
+				"Bedroom Studio",
+				"Concert Hall",
+				"Dark Room",
+				"Bright & Airy",
+				"Warm Tube",
+				"Space Echo"
+			]
+		},
+
 		"title-audio-equalizer": {
 			"type": "title",
 			"name": "10-Band Graphic Equalizer (dB)"
@@ -1167,8 +1107,8 @@
 			"type": "float",
 			"name": "30 Hz (Sub Bass)",
 			"default": 0.0,
-			"min": -12.0,
-			"max": 12.0,
+			"min": -6.0,
+			"max": 6.0,
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.5,
@@ -1180,8 +1120,8 @@
 			"type": "float",
 			"name": "60 Hz (Bass Kick)",
 			"default": 0.0,
-			"min": -12.0,
-			"max": 12.0,
+			"min": -6.0,
+			"max": 6.0,
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.5,
@@ -1193,8 +1133,8 @@
 			"type": "float",
 			"name": "125 Hz (Low Mid)",
 			"default": 0.0,
-			"min": -12.0,
-			"max": 12.0,
+			"min": -9.0,
+			"max": 9.0,
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.5,
@@ -1206,8 +1146,8 @@
 			"type": "float",
 			"name": "250 Hz (Warmth)",
 			"default": 0.0,
-			"min": -12.0,
-			"max": 12.0,
+			"min": -9.0,
+			"max": 9.0,
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.5,
@@ -1219,8 +1159,8 @@
 			"type": "float",
 			"name": "500 Hz (Midrange)",
 			"default": 0.0,
-			"min": -12.0,
-			"max": 12.0,
+			"min": -9.0,
+			"max": 9.0,
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.5,
@@ -1232,8 +1172,8 @@
 			"type": "float",
 			"name": "1 kHz (Presence)",
 			"default": 0.0,
-			"min": -12.0,
-			"max": 12.0,
+			"min": -9.0,
+			"max": 9.0,
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.5,
@@ -1245,8 +1185,8 @@
 			"type": "float",
 			"name": "2 kHz (Clarity)",
 			"default": 0.0,
-			"min": -12.0,
-			"max": 12.0,
+			"min": -9.0,
+			"max": 9.0,
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.5,
@@ -1258,8 +1198,8 @@
 			"type": "float",
 			"name": "4 kHz (High Mid)",
 			"default": 0.0,
-			"min": -12.0,
-			"max": 12.0,
+			"min": -9.0,
+			"max": 9.0,
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.5,
@@ -1271,8 +1211,8 @@
 			"type": "float",
 			"name": "8 kHz (Treble Sparkle)",
 			"default": 0.0,
-			"min": -12.0,
-			"max": 12.0,
+			"min": -9.0,
+			"max": 9.0,
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.5,
@@ -1284,8 +1224,8 @@
 			"type": "float",
 			"name": "16 kHz (Air & Brilliance)",
 			"default": 0.0,
-			"min": -12.0,
-			"max": 12.0,
+			"min": -9.0,
+			"max": 9.0,
 			"control": {
 				"arrows": true,
 				"arrow-step": 0.5,

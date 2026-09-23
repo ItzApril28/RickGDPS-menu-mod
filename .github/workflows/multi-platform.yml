@@ -65,9 +65,9 @@ jobs:
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'latest' }}
-          name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'Latest Build' }}
-          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'v1.4.6-beta.1' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'Small Patch 1.4.6-beta 1' }}
+          prerelease: true
           files: ${{ steps.build.outputs.build-output }}/*.geode
           generate_release_notes: ${{ startsWith(github.ref, 'refs/tags/v') }}
           body: ${{ !startsWith(github.ref, 'refs/tags/v') && format('Automated build from commit {0} on `master`.\n\nThis is a pre-release and is updated on every push.', github.sha) || '' }}

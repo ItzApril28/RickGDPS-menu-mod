@@ -304,28 +304,36 @@ void ModernSettingsPopup::buildTabContent(Tab tab) {
         addRow(makeBoolRow(listW, "custom-shader-enabled", "Custom Shader Pass", "Load external user GLSL post-processing."));
     }
     else if (tab == Tab::Audio) {
+        addRow(makeSectionTitle(listW, "8D Audio"));
+        addRow(makeBoolRow(listW, "audio-8d", "8D Audio Effect", "Smooth left-to-right binaural rotation around your head with a hint of reverb, like 8D audio on YouTube."));
+        addRow(makeFloatRow(listW, "audio-8d-speed", "8D Rotation Speed", 0.05f, 0.50f, 0.01f, "Hz"));
+        addRow(makeDivider(listW));
+
         addRow(makeSectionTitle(listW, "Audio DSP & Reverb"));
         addRow(makeCycleRow(listW, "audio-preset", "Sound Profile Preset",
             {"Custom","GDH Reverb","Spatial","Cinema","Clear","Bass Boost","Late Night","Small Room","Cathedral","Plate"}));
-        addRow(makeFloatRow(listW, "audio-reverb", "Reverb Decay", 100.f, 5000.f, 100.f, "ms"));
-        addRow(makeFloatRow(listW, "audio-reverb-wet", "Reverb Wet Mix", 0.f, 1.f, 0.05f));
-        addRow(makeFloatRow(listW, "audio-reverb-dry", "Reverb Dry Mix", 0.f, 1.f, 0.05f));
-        addRow(makeFloatRow(listW, "audio-reverb-diffusion", "Reverb Diffusion", 0.f, 1.f, 0.05f));
-        addRow(makeFloatRow(listW, "audio-reverb-hf-decay", "HF Damping", 0.f, 1.f, 0.05f));
+        addRow(makeFloatRow(listW, "audio-reverb", "Reverb Strength", 0.f, 10000.f, 100.f, "ms"));
         addRow(makeFloatRow(listW, "audio-muffle", "Muffle / Lowpass", 0.f, 1.f, 0.05f));
         addRow(makeDivider(listW));
 
+        addRow(makeSectionTitle(listW, "Audio Filters"));
+        addRow(makeCycleRow(listW, "audio-filter", "Active Filter",
+            {"None","Telephone","Underwater","Lo-Fi Tape","Vintage Radio",
+             "Megaphone","Stadium","Bedroom Studio","Concert Hall",
+             "Dark Room","Bright & Airy","Warm Tube","Space Echo"}));
+        addRow(makeDivider(listW));
+
         addRow(makeSectionTitle(listW, "10-Band Equalizer (dB)"));
-        addRow(makeFloatRow(listW, "audio-eq-30", "30 Hz (Sub Bass)", -12.f, 12.f, 0.5f, "dB"));
-        addRow(makeFloatRow(listW, "audio-eq-60", "60 Hz (Bass Kick)", -12.f, 12.f, 0.5f, "dB"));
-        addRow(makeFloatRow(listW, "audio-eq-125", "125 Hz (Low Mid)", -12.f, 12.f, 0.5f, "dB"));
-        addRow(makeFloatRow(listW, "audio-eq-250", "250 Hz (Warmth)", -12.f, 12.f, 0.5f, "dB"));
-        addRow(makeFloatRow(listW, "audio-eq-500", "500 Hz (Midrange)", -12.f, 12.f, 0.5f, "dB"));
-        addRow(makeFloatRow(listW, "audio-eq-1000", "1 kHz (Presence)", -12.f, 12.f, 0.5f, "dB"));
-        addRow(makeFloatRow(listW, "audio-eq-2000", "2 kHz (Clarity)", -12.f, 12.f, 0.5f, "dB"));
-        addRow(makeFloatRow(listW, "audio-eq-4000", "4 kHz (High Mid)", -12.f, 12.f, 0.5f, "dB"));
-        addRow(makeFloatRow(listW, "audio-eq-8000", "8 kHz (Treble)", -12.f, 12.f, 0.5f, "dB"));
-        addRow(makeFloatRow(listW, "audio-eq-16000", "16 kHz (Air)", -12.f, 12.f, 0.5f, "dB"));
+        addRow(makeFloatRow(listW, "audio-eq-30", "30 Hz (Sub Bass)", -6.f, 6.f, 0.5f, "dB"));
+        addRow(makeFloatRow(listW, "audio-eq-60", "60 Hz (Bass Kick)", -6.f, 6.f, 0.5f, "dB"));
+        addRow(makeFloatRow(listW, "audio-eq-125", "125 Hz (Low Mid)", -9.f, 9.f, 0.5f, "dB"));
+        addRow(makeFloatRow(listW, "audio-eq-250", "250 Hz (Warmth)", -9.f, 9.f, 0.5f, "dB"));
+        addRow(makeFloatRow(listW, "audio-eq-500", "500 Hz (Midrange)", -9.f, 9.f, 0.5f, "dB"));
+        addRow(makeFloatRow(listW, "audio-eq-1000", "1 kHz (Presence)", -9.f, 9.f, 0.5f, "dB"));
+        addRow(makeFloatRow(listW, "audio-eq-2000", "2 kHz (Clarity)", -9.f, 9.f, 0.5f, "dB"));
+        addRow(makeFloatRow(listW, "audio-eq-4000", "4 kHz (High Mid)", -9.f, 9.f, 0.5f, "dB"));
+        addRow(makeFloatRow(listW, "audio-eq-8000", "8 kHz (Treble)", -9.f, 9.f, 0.5f, "dB"));
+        addRow(makeFloatRow(listW, "audio-eq-16000", "16 kHz (Air)", -9.f, 9.f, 0.5f, "dB"));
     }
     else if (tab == Tab::Mods) {
         addRow(makeSectionTitle(listW, "Gameplay Hacks"));
