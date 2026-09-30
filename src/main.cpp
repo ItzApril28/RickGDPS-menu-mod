@@ -5,6 +5,7 @@
 #include "render/SmaaRenderer.hpp"
 #include "shaders/PostProcessShaders.hpp"
 #include "shaders/aa/SmaaShader.hpp"
+#include "player/MusicPlayerManager.hpp"
 
 #include <Geode/Geode.hpp>
 #include <Geode/binding/FMODAudioEngine.hpp>
@@ -1306,6 +1307,14 @@ namespace {
     }
 
     void renderSceneWithPostProcessing(auto&& visitNext) {
+        // Skip all post-processing while the music player overlay is on screen.
+        // The overlay renders UI controls and text that would be unreadable
+        // through the shader stack, and we save GPU time as a bonus.
+        if (rickgdps::music::g_musicOverlayActive.load(std::memory_order_acquire)) {
+            visitNext();
+            return;
+        }
+
         auto const config = selectedPostProcessConfig();
         GLint callerFramebuffer = 0;
         std::array<GLint, 4> callerViewport = {};

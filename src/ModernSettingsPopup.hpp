@@ -2,6 +2,7 @@
 #include <Geode/Geode.hpp>
 #include <Geode/ui/Popup.hpp>
 #include <Geode/ui/ScrollLayer.hpp>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -39,4 +40,8 @@ private:
     cocos2d::CCNode* makeCycleRow(float width, char const* key, char const* title, std::vector<std::string> const& options);
     cocos2d::CCNode* makeSectionTitle(float width, char const* title);
     cocos2d::CCNode* makeDivider(float width);
+    cocos2d::CCNode* makeToolRow(
+        float width, char const* title, char const* desc,
+        cocos2d::ccColor3B accent, std::function<void()> onOpen
+    );
 };

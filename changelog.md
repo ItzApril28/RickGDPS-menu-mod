@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.4.7 - beta — Music Player Studio & Live Audio DSP
+
+### Music Player Studio
+- **Full In-Game Music Player (`MusicPlayerPopup` / `MusicPlayerManager`)**:
+  - Built-in audio workstation directly connected to the mod's real-time FMOD DSP effects.
+  - Pre-loaded with official Geometry Dash soundtracks (Stereo Madness through Dash + StayInsideMe + menuLoop) plus automatic detection of downloaded Custom Songs.
+  - Complete playback controls: Play, Pause, Resume, Stop, Next, Previous, Progress scrubber bar, Volume presets, and Pitch/Speed dials (0.5x to 2.0x).
+  - Loop modes: `Loop Track`, `Loop All`, and `Shuffle`.
+  - Real-time 20-band Spectrum Visualizer reacting dynamically to audio energy, equalizer gains, muffle cutoff, and 8D binaural pan.
+- **Four Dedicated Studio Sub-Tabs**:
+  - **♫ PLAYER**: Now Playing card with dynamic title scaling, live animated visualizer, scrubber, playback controls, and quick DSP toggles.
+  - **≡ TRACKS**: Smooth scrollable playlist with track numbers, titles, artists, and one-tap play buttons.
+  - **🎛 LIVE FX**: Dedicated controls for 8D Binaural Audio rotation (with speed presets), Studio Reverb (Room, Cinema, Cathedral, GDH Reverb, Plate), and Muffle filters (Clean, Cozy, Party Next Door, Underwater, Telephone, Lo-Fi Tape, Vintage Radio, Space Echo).
+  - **🎚 10-BAND EQ**: Full graphic equalizer with 10 frequency sliders (-9 dB to +9 dB) and quick presets (`Flat`, `Bass Boost`, `Vocal Boost`, `Treble`, `EDM / V-Shape`).
+- **Modern Theme & Curved Corner Overhaul**:
+  - Unified theme with `ModernTheme.hpp` (Deep Teal `#002D2D`, `#004444`, and Cream / Butter `#FFFFC0`).
+  - Switched from blocky rects to smooth curved GD corners (`GJ_square01.png`, `GJ_square05.png`, `GJ_square02.png`).
+  - Dark inset panel behind the content area eliminating any white window backgrounds.
+  - Added dynamic title fitting (`fitLabel`) eliminating all text overlap and overflow.
+  - Centralized resource configuration in `src/player/MusicPlayerTheme.hpp` for easy customization.
+- **Cleanups**:
+  - Removed obsolete web browser, file explorer, and terminal shell.
+
+
 ## Small Patch 1.4.6-beta 1
 
 ### Audio Quality Overhaul & New Features

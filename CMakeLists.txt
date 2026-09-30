@@ -23,12 +23,14 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 if (MSVC)
-    # Avoid an MSVC 18.x whole-program optimization crash during the final
+    # Avoid an MSVC 18.x whole-program optimization / PCH crash during the final
     # "Generating Code" pass. Geode does not require LTCG for a mod DLL.
     set_target_properties(${PROJECT_NAME} PROPERTIES
         INTERPROCEDURAL_OPTIMIZATION FALSE
+        DISABLE_PRECOMPILE_HEADERS ON
     )
-    target_compile_options(${PROJECT_NAME} PRIVATE "/GL-" "/Od")
+    target_compile_options(${PROJECT_NAME} PRIVATE "/MP" "/GL-" "/Od" "/bigobj")
+    target_link_options(${PROJECT_NAME} PRIVATE "/LTCG:OFF")
 endif()
 
 # MSVC can crash while optimizing the very large embedded SMAA GLSL source.

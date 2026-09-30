@@ -8,7 +8,7 @@
 	},
 	"id": "itzapril28.bettervisual-and-audio",
 	"name": "RickGdps Menu Mod",
-	"version": "v1.4.6-beta.1",
+	"version": "v1.4.7-beta",
 	"early-load": true,
 	"load-priority": -4000,
 	"developer": "RickGdps",

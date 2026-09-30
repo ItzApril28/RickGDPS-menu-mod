@@ -1,44 +1,55 @@
-# BetterVisual and Audio
+# BetterVisual and Audio (RickGdps Menu Mod) — v1.4.7 - beta
 
-BetterVisual and Audio is an unofficial fork of [BetterVisuals by ItMe12s](https://github.com/ItMe12s/BetterVisuals/). It keeps the original rendering and performance tools while expanding the collection of fullscreen visual effects and presets.
+BetterVisual and Audio is an advanced visual enhancement, audio DSP workstation, and menu mod for Geometry Dash (Geode 2.2081). It features custom shaders, dynamic render scaling, super-sampling, studio audio processing, and an interactive in-game music player.
 
-The mod works in levels and the editor. Configure it through Geode's mod settings or the pause-menu settings shortcut.
+Configure the mod through the custom in-game settings popup or Geode mod settings.
 
-## Credits and fork status
+## What's New in v1.4.7 - beta
 
-- Original project: [BetterVisuals](https://github.com/ItMe12s/BetterVisuals/) by ItMe12s
-- This fork: BetterVisual and Audio by ItzApril28
-- Framebuffer and VBO handling references: [Geode DevTools](https://github.com/geode-sdk/DevTools)
+- **Music Player Studio (`♫ MUSIC STUDIO`)**:
+  - Full-featured in-game audio workstation with direct FMOD channel and DSP effect integration.
+  - Pre-loaded with official Geometry Dash soundtracks and automatic discovery of downloaded Custom Songs.
+  - Interactive playback deck: Play, Pause, Resume, Stop, Next, Previous, Scrubber seek bar, Volume presets, and Pitch/Speed dials (0.5x to 2.0x).
+  - Loop modes: `Loop Track`, `Loop All`, and `Shuffle`.
+  - Real-time 20-band Spectrum Visualizer reacting dynamically to audio energy, equalizer gains, muffle cutoff, and 8D binaural pan.
+  - 4 sub-tabs: **♫ PLAYER**, **≡ TRACKS**, **🎛 LIVE FX** (8D audio, studio reverb, and acoustic muffle filters), and **🎚 10-BAND EQ** (-9 dB to +9 dB graphic equalizer).
+  - Modern curved GD-styled UI with deep teal and cream/butter aesthetic (`ModernTheme.hpp`), curved corners, dark inset panels, and dynamic label fitting.
+  - Fully editable resource theme configuration in `src/player/MusicPlayerTheme.hpp`.
+- **Cleanups**:
+  - Removed obsolete web browser, file explorer, and terminal components.
 
-This repository is a forked and customized version, not an official BetterVisuals release.
+## Features
 
-## Performance
+### Audio DSP & Music Studio
+- **Music Player Studio**: In-game player with visualizer, playlist, and audio effect manipulation.
+- **8D Audio Effect**: Immersive 3D binaural rotation with subtle room acoustics.
+- **Studio Reverb Engine**: Handcrafted acoustic profiles (Room, Cinema, Cathedral, GDH Reverb, Plate).
+- **Acoustic Muffle Filters**: Cozy lowpass filters, Underwater, Telephone, Lo-Fi Tape, Vintage Radio, and Space Echo.
+- **10-Band Graphic Equalizer**: Precise frequency sculpting (30 Hz to 16 kHz) with Flat, Bass Boost, Vocal, Treble, and EDM presets.
 
-Fullscreen post-processing can reduce frame rate, especially on mobile and lower-end devices. Use fewer simultaneous effects, lower render scale, or reduce effect strength if gameplay becomes slow.
+### Rendering & Shaders
+- **Dynamic Render Scaling (DRS)**: Target-framerate based resolution scaling.
+- **Super-Sampling Anti-Aliasing (SSAA)**: 1.5x and 2.0x super-sampling with AMD FidelityFX FSR 1 reconstruction.
+- **Anti-Aliasing**: FXAA, SMAA High, SMAA Ultra.
+- **Sharpening**: AMD FidelityFX CAS (Contrast-Adaptive Sharpening).
+- **Bloom & Atmosphere**: Multi-pass HDR bloom with 14 profiles, volumetric God Rays, anamorphic lens flare, ambient aurora, and cinematic vignette.
+- **Stylized & Retro Shaders**: CRT scanlines, VHS tape jitter, 35mm film grain, 8-bit Bayer dithering, comic halftone, ASCII typography, pixel art downscale, and neon pulse.
+- **Camera Effects**: Handheld camera wobble, camera motion blur, depth of field focus, and death warp shockwave.
+- **Custom GLSL Shader**: Hot-reloadable `custom.glsl` from mod persistent folder.
 
-Recommended baseline configurations:
+## Performance Profiles
 
 - **Max FPS:** 0.5x render scale, Nearest upscaling, AA off, sharpening off.
-- **Better FPS:** 0.7x render scale, FSR 1, AA off, sharpening off.
-- **Better Visuals:** 1x render scale, SMAA High, sharpening off.
+- **Balanced:** 0.75x render scale, FSR 1, AA off, sharpening off.
+- **Visual Quality:** 1.0x render scale, SMAA High, CAS sharpening.
+- **Cinematic:** 1.5x SSAA, Bloom, Vignette, Film Grain.
 
-## Rendering tools
+## Credits & Fork Status
 
-- Render scale with Nearest-neighbour or AMD FidelityFX FSR 1 upscaling
-- FXAA, SMAA High, and SMAA Ultra anti-aliasing
-- Bloom (with Dynamic Bloom automation) and ten bloom presets
-- Parallax shader and Split Screen view modes (Horizontal, Vertical, Quad 2x2)
-- Animated LUT transitions and color tonemapping
-- Handheld camera wobble & shake, God Rays, film grain, lens flare glow, motion blur, and ambient aurora
-- Chromatic aberration, neon pulse, radial blur, vignette, halftone, CRT, VHS, dithering, grayscale, and ASCII
-- Combined theme presets and custom GLSL shader loading
+- Original project: [BetterVisuals](https://github.com/ItMe12s/BetterVisuals/) by ItMe12s
+- Fork and enhancements: BetterVisual and Audio by ItzApril28 / RickGdps
+- Framebuffer and VBO references: [Geode DevTools](https://github.com/geode-sdk/DevTools)
 
-Some effects may distort text and UI elements because they are applied to the full scene.
+## License
 
-## Custom GLSL shaders
-
-The **Custom GLSL Shader** setting loads `custom.glsl` from the mod's Geode persistent folder. The fragment shader must declare `u_texture`, `u_invResolution`, and `v_texCoord`, and must write `gl_FragColor`. The built-in fullscreen vertex shader is supplied automatically.
-
-## Licenses and sources
-
-Shader-specific credits, citations, and licenses are included in the source files where applicable. See the original [BetterVisuals repository](https://github.com/ItMe12s/BetterVisuals/) for its upstream project information.
+Shader-specific credits, citations, and licenses are included in the source files where applicable.

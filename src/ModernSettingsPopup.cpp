@@ -1,5 +1,6 @@
 #include "ModernSettingsPopup.hpp"
 #include "ModernTheme.hpp"
+#include "player/MusicPlayerLayer.hpp"
 #include <Geode/Geode.hpp>
 #include <Geode/ui/ScrollLayer.hpp>
 #include <Geode/ui/SliderNode.hpp>
@@ -304,6 +305,12 @@ void ModernSettingsPopup::buildTabContent(Tab tab) {
         addRow(makeBoolRow(listW, "custom-shader-enabled", "Custom Shader Pass", "Load external user GLSL post-processing."));
     }
     else if (tab == Tab::Audio) {
+        addRow(makeSectionTitle(listW, "Music Studio"));
+        addRow(makeToolRow(listW, "Music Player Studio",
+            "Open interactive music player with real-time audio FX & visualizer.",
+            {255, 180, 50}, [] { rickgdps::music::openMusicPlayer(); }));
+        addRow(makeDivider(listW));
+
         addRow(makeSectionTitle(listW, "8D Audio"));
         addRow(makeBoolRow(listW, "audio-8d", "8D Audio Effect", "Smooth left-to-right binaural rotation around your head with a hint of reverb, like 8D audio on YouTube."));
         addRow(makeFloatRow(listW, "audio-8d-speed", "8D Rotation Speed", 0.05f, 0.50f, 0.01f, "Hz"));
@@ -357,6 +364,12 @@ void ModernSettingsPopup::buildTabContent(Tab tab) {
         addRow(makeBoolRow(listW, "hide-attempts", "Hide Attempt Counter", "Hide the attempt count during attempts."));
         addRow(makeBoolRow(listW, "hitbox-enabled", "Show Object Hitboxes", "Draw live bounding boxes for player and hazards."));
         addRow(makeBoolRow(listW, "hitbox-solid", "Solid Fill Hitboxes", "Fill hitboxes with semi-transparent color."));
+        addRow(makeDivider(listW));
+
+        addRow(makeSectionTitle(listW, "Music Studio"));
+        addRow(makeToolRow(listW, "Music Player Studio",
+            "Open interactive music player with real-time audio FX & visualizer.",
+            {255, 180, 50}, [] { rickgdps::music::openMusicPlayer(); }));
     }
 
     scroll->m_contentLayer->updateLayout();
@@ -489,6 +502,70 @@ cocos2d::CCNode* ModernSettingsPopup::makeBoolRow(float width, char const* key, 
             }
         }
     });
+    menu->addChild(btn);
+
+    return row;
+}
+
+cocos2d::CCNode* ModernSettingsPopup::makeToolRow(
+    float width, char const* title, char const* desc,
+    cocos2d::ccColor3B accent, std::function<void()> onOpen
+) {
+    constexpr float kToolRowH = 40.f;
+    constexpr float kTextBoundPad = 92.f; // room reserved for the status badge
+    float const textBound = width - kTextBoundPad;
+
+    auto* row = cocos2d::CCNode::create();
+    row->setContentSize({width, kToolRowH});
+
+    auto* bg = CCScale9Sprite::create(ModernTheme::kSprRowCard);
+    if (!bg) bg = CCScale9Sprite::create("GJ_square01.png");
+    bg->setContentSize({width, kToolRowH});
+    bg->setColor(ModernTheme::kRowBgColor);
+    bg->setOpacity(ModernTheme::kRowBgOpacity);
+
+    // Left accent strip identifies the tool at a glance.
+    auto* bar = CCLayerColor::create({accent.r, accent.g, accent.b, 255}, 4.f, kToolRowH - 10.f);
+    bar->setAnchorPoint({0.f, 0.f});
+    bar->setPosition({4.f, 5.f});
+    bg->addChild(bar, 1);
+
+    auto* titleLbl = cocos2d::CCLabelBMFont::create(title, ModernTheme::kFontLabels);
+    titleLbl->setScale(0.38f);
+    titleLbl->setColor({255, 255, 255});
+    titleLbl->setAnchorPoint({0.f, 1.f});
+    titleLbl->setPosition({14.f, kToolRowH - 5.f});
+    if (titleLbl->getContentSize().width * 0.38f > textBound) {
+        titleLbl->setScale(textBound / titleLbl->getContentSize().width);
+    }
+    bg->addChild(titleLbl, 1);
+
+    auto* descLbl = cocos2d::CCLabelBMFont::create(desc, ModernTheme::kFontValues);
+    descLbl->setScale(0.32f);
+    descLbl->setColor({165, 200, 200});
+    descLbl->setAnchorPoint({0.f, 1.f});
+    descLbl->setPosition({14.f, kToolRowH - 19.f});
+    if (descLbl->getContentSize().width * descLbl->getScale() > textBound) {
+        descLbl->setScale(textBound / descLbl->getContentSize().width);
+    }
+    bg->addChild(descLbl, 1);
+
+    // Right-hand status button
+    auto* status = cocos2d::CCLabelBMFont::create("OPEN >", ModernTheme::kFontValues);
+    status->setScale(0.34f);
+    status->setColor({120, 235, 150});
+    status->setAnchorPoint({1.f, 0.5f});
+    status->setPosition({width - 10.f, kToolRowH * 0.5f});
+    bg->addChild(status, 1);
+
+    auto* menu = cocos2d::CCMenu::create();
+    menu->setPosition({0.f, 0.f});
+    row->addChild(menu);
+
+    auto* btn = CCMenuItemExt::createSpriteExtra(bg, [onOpen](cocos2d::CCObject*) {
+        if (onOpen) onOpen();
+    });
+    btn->setPosition({width * 0.5f, kToolRowH * 0.5f});
     menu->addChild(btn);
 
     return row;
