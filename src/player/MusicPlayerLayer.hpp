@@ -1,11 +1,12 @@
 #pragma once
 
-#include <Geode/Geode.hpp>
-#include <Geode/ui/Popup.hpp>
-#include <Geode/ui/ScrollLayer.hpp>
-#include <Geode/binding/Slider.hpp>
 #include "MusicPlayerManager.hpp"
 #include "MusicPlayerTheme.hpp"
+
+#include <Geode/Geode.hpp>
+#include <Geode/binding/Slider.hpp>
+#include <Geode/ui/Popup.hpp>
+#include <Geode/ui/ScrollLayer.hpp>
 
 namespace rickgdps::music {
 
@@ -42,6 +43,7 @@ namespace rickgdps::music {
         CCMenuItemSpriteExtra* m_playPauseBtn = nullptr;
         CCMenuItemSpriteExtra* m_loopBtn = nullptr;
         CCMenuItemSpriteExtra* m_shuffleBtn = nullptr;
+        std::uint64_t m_displayedTrackRevision = 0;
 
         // Visualizer bars
         std::vector<cocos2d::CCLayerColor*> m_visualizerBars;
@@ -59,11 +61,14 @@ namespace rickgdps::music {
         void buildEffectsView();
         void buildEqualizerView();
 
-        // Helpers
+        // Handlers & Helpers
+        void onSliderValueChanged(cocos2d::CCObject* sender);
         void refreshPlayerState();
         void updateVisualizer();
         cocos2d::CCNode* makeCard(float w, float h);
-        CCMenuItemSpriteExtra* makeTextButton(char const* text, float w, float h, std::function<void()> onClick, float textScale = 0.38f);
+        CCMenuItemSpriteExtra* makeTextButton(
+            char const* text, float w, float h, std::function<void()> onClick, float textScale = 0.38f
+        );
     };
 
     void openMusicPlayer();

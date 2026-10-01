@@ -66,6 +66,7 @@ build-*/
 
 # Local scratch / debug output (ad-hoc dumps, build logs, temp patch scripts)
 *.log
+build-log.txt
 dump_*.txt
 pb.txt
 popup_*.txt

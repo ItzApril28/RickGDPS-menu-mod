@@ -1,13 +1,12 @@
 #include "MusicPlayerManager.hpp"
 
 #include <Geode/binding/FMODAudioEngine.hpp>
-#include <Geode/binding/MusicDownloadManager.hpp>
 #include <Geode/binding/LevelTools.hpp>
+#include <Geode/binding/MusicDownloadManager.hpp>
 #include <Geode/binding/SongInfoObject.hpp>
-
+#include <algorithm>
 #include <cmath>
 #include <random>
-#include <algorithm>
 
 using namespace geode::prelude;
 
@@ -34,30 +33,30 @@ namespace rickgdps::music {
     };
 
     static constexpr OfficialSongDef kOfficialSongs[] = {
-        {0,  "Stereo Madness",          "ForeverBound",  "StereoMadness.mp3"},
-        {1,  "Back On Track",           "DJVI",          "BackOnTrack.mp3"},
-        {2,  "Polargeist",              "Step",          "Polargeist.mp3"},
-        {3,  "Dry Out",                 "DJVI",          "DryOut.mp3"},
-        {4,  "Base After Base",         "DJVI",          "BaseAfterBase.mp3"},
-        {5,  "Can't Let Go",            "DJVI",          "CantLetGo.mp3"},
-        {6,  "Jumper",                  "Waterflame",    "Jumper.mp3"},
-        {7,  "Time Machine",            "Waterflame",    "TimeMachine.mp3"},
-        {8,  "Cycles",                  "DJVI",          "Cycles.mp3"},
-        {9,  "xStep",                   "DJVI",          "xStep.mp3"},
-        {10, "Clutterfunk",             "Waterflame",    "Clutterfunk.mp3"},
-        {11, "Theory of Everything",    "DJ-Nate",       "TheoryOfEverything.mp3"},
-        {12, "Electroman Adventures",   "Waterflame",    "Electroman.mp3"},
-        {13, "Clubstep",                "DJ-Nate",       "Clubstep.mp3"},
-        {14, "Electrodynamix",          "DJ-Nate",       "Electrodynamix.mp3"},
-        {15, "Hexagon Force",           "Waterflame",    "HexagonForce.mp3"},
-        {16, "Blast Processing",        "Waterflame",    "BlastProcessing.mp3"},
-        {17, "Theory of Everything 2",  "DJ-Nate",       "TheoryOfEverything2.mp3"},
-        {18, "Geometrical Dominator",   "Waterflame",    "GeometricalDominator.mp3"},
-        {19, "Deadlocked",              "F-777",         "Deadlocked.mp3"},
-        {20, "Fingerdash",              "MDK",           "Fingerdash.mp3"},
-        {21, "Dash",                    "MDK",           "Dash.mp3"},
+        {0, "Stereo Madness", "ForeverBound", "StereoMadness.mp3"},
+        {1, "Back On Track", "DJVI", "BackOnTrack.mp3"},
+        {2, "Polargeist", "Step", "Polargeist.mp3"},
+        {3, "Dry Out", "DJVI", "DryOut.mp3"},
+        {4, "Base After Base", "DJVI", "BaseAfterBase.mp3"},
+        {5, "Can't Let Go", "DJVI", "CantLetGo.mp3"},
+        {6, "Jumper", "Waterflame", "Jumper.mp3"},
+        {7, "Time Machine", "Waterflame", "TimeMachine.mp3"},
+        {8, "Cycles", "DJVI", "Cycles.mp3"},
+        {9, "xStep", "DJVI", "xStep.mp3"},
+        {10, "Clutterfunk", "Waterflame", "Clutterfunk.mp3"},
+        {11, "Theory of Everything", "DJ-Nate", "TheoryOfEverything.mp3"},
+        {12, "Electroman Adventures", "Waterflame", "Electroman.mp3"},
+        {13, "Clubstep", "DJ-Nate", "Clubstep.mp3"},
+        {14, "Electrodynamix", "DJ-Nate", "Electrodynamix.mp3"},
+        {15, "Hexagon Force", "Waterflame", "HexagonForce.mp3"},
+        {16, "Blast Processing", "Waterflame", "BlastProcessing.mp3"},
+        {17, "Theory of Everything 2", "DJ-Nate", "TheoryOfEverything2.mp3"},
+        {18, "Geometrical Dominator", "Waterflame", "GeometricalDominator.mp3"},
+        {19, "Deadlocked", "F-777", "Deadlocked.mp3"},
+        {20, "Fingerdash", "MDK", "Fingerdash.mp3"},
+        {21, "Dash", "MDK", "Dash.mp3"},
         {22, "Stay Inside Me (Practice)", "OcularNebula", "StayInsideMe.mp3"},
-        {23, "Menu Theme",              "RobTop",        "menuLoop.mp3"}
+        {23, "Menu Theme", "RobTop", "menuLoop.mp3"}
     };
 
     MusicPlayerManager& MusicPlayerManager::get() {
@@ -66,13 +65,22 @@ namespace rickgdps::music {
     }
 
     MusicPlayerManager::MusicPlayerManager() {
+        if (auto* mod = Mod::get()) {
+            m_8dEnabled = mod->getSettingValue<bool>("audio-8d");
+            m_8dSpeed = static_cast<float>(mod->getSettingValue<double>("audio-8d-speed"));
+            m_reverb = static_cast<float>(mod->getSettingValue<double>("audio-reverb"));
+            m_muffle = static_cast<float>(mod->getSettingValue<double>("audio-muffle"));
+            for (int i = 0; i < 10; ++i) {
+                m_eqBands[i] = static_cast<float>(mod->getSettingValue<double>(kEqSettingKeys[i]));
+            }
+        }
         initPlaylist();
+        initFFT();
     }
 
     void MusicPlayerManager::initPlaylist() {
         m_tracks.clear();
 
-        // 1. Add all official GD songs
         for (auto const& def : kOfficialSongs) {
             MusicTrack track;
             track.title = def.title;
@@ -84,14 +92,13 @@ namespace rickgdps::music {
             m_tracks.push_back(track);
         }
 
-        // 2. Add downloaded custom songs if available
         refreshPlaylist();
     }
 
     void MusicPlayerManager::refreshPlaylist() {
-        // Keep official songs
-        if (m_tracks.size() > 24) {
-            m_tracks.erase(m_tracks.begin() + 24, m_tracks.end());
+        constexpr size_t officialCount = sizeof(kOfficialSongs) / sizeof(OfficialSongDef);
+        if (m_tracks.size() > officialCount) {
+            m_tracks.erase(m_tracks.begin() + officialCount, m_tracks.end());
         }
 
         auto* mdm = MusicDownloadManager::sharedState();
@@ -106,8 +113,11 @@ namespace rickgdps::music {
             if (localPath.empty()) continue;
 
             MusicTrack track;
-            track.title = obj->m_songName.empty() ? ("Custom Song #" + std::to_string(obj->m_songID)) : std::string(obj->m_songName);
-            track.artist = obj->m_artistName.empty() ? "Unknown Artist" : std::string(obj->m_artistName);
+            track.title = obj->m_songName.empty() ?
+                ("Custom Song #" + std::to_string(obj->m_songID)) :
+                std::string(obj->m_songName);
+            track.artist =
+                obj->m_artistName.empty() ? "Unknown Artist" : std::string(obj->m_artistName);
             track.filename = std::string(localPath);
             track.isCustom = true;
             track.customSongID = obj->m_songID;
@@ -123,6 +133,7 @@ namespace rickgdps::music {
         }
 
         m_currentIndex = index;
+        ++m_trackRevision;
         playCurrent();
     }
 
@@ -151,7 +162,8 @@ namespace rickgdps::music {
         if (!m_isPlaying) {
             if (m_currentIndex < 0) {
                 playTrack(0);
-            } else {
+            }
+            else {
                 playCurrent();
             }
             return;
@@ -159,7 +171,8 @@ namespace rickgdps::music {
 
         if (m_isPaused) {
             resume();
-        } else {
+        }
+        else {
             pause();
         }
     }
@@ -198,7 +211,8 @@ namespace rickgdps::music {
                 nextIdx = (nextIdx + 1) % static_cast<int>(m_tracks.size());
             }
             playTrack(nextIdx);
-        } else {
+        }
+        else {
             int nextIdx = (m_currentIndex + 1) % static_cast<int>(m_tracks.size());
             playTrack(nextIdx);
         }
@@ -207,13 +221,13 @@ namespace rickgdps::music {
     void MusicPlayerManager::prevTrack() {
         if (m_tracks.empty()) return;
 
-        // If played for more than 3 seconds, restart current track
         if (getCurrentTime() > 3.0f) {
             seek(0.0f);
             return;
         }
 
-        int prevIdx = (m_currentIndex - 1 + static_cast<int>(m_tracks.size())) % static_cast<int>(m_tracks.size());
+        int prevIdx = (m_currentIndex - 1 + static_cast<int>(m_tracks.size())) %
+            static_cast<int>(m_tracks.size());
         playTrack(prevIdx);
     }
 
@@ -234,7 +248,8 @@ namespace rickgdps::music {
         auto* engine = FMODAudioEngine::sharedEngine();
         if (!engine) return 0.f;
         float dur = static_cast<float>(engine->getMusicLengthMS(0)) / 1000.f;
-        if (dur <= 0.01f && m_currentIndex >= 0 && m_currentIndex < static_cast<int>(m_tracks.size())) {
+        if (dur <= 0.01f && m_currentIndex >= 0 &&
+            m_currentIndex < static_cast<int>(m_tracks.size())) {
             dur = m_tracks[static_cast<size_t>(m_currentIndex)].duration;
         }
         return dur;
@@ -290,18 +305,18 @@ namespace rickgdps::music {
     void MusicPlayerManager::update(float dt) {
         m_visualizerPhase += dt * 3.5f;
 
-        // Auto-advance track when current track finishes
         if (m_isPlaying && !m_isPaused) {
             auto* engine = FMODAudioEngine::sharedEngine();
             if (engine) {
+                // Let FMOD handle single-track looping natively without manual truncation
+                if (m_loopMode == LoopMode::Track) {
+                    return;
+                }
+
                 float curTime = getCurrentTime();
                 float dur = getDuration();
-                if (dur > 2.0f && curTime >= dur - 0.25f) {
-                    if (m_loopMode == LoopMode::Track) {
-                        seek(0.0f);
-                    } else {
-                        nextTrack();
-                    }
+                if (dur > 2.0f && curTime >= dur - 0.05f) {
+                    nextTrack();
                 }
             }
         }
@@ -310,87 +325,81 @@ namespace rickgdps::music {
     // ─── Direct Audio Effect Interaction ─────────────────────────────────────
 
     bool MusicPlayerManager::is8DEnabled() const {
-        auto* mod = Mod::get();
-        if (!mod) return false;
-        return mod->getSettingValue<bool>("audio-8d");
+        return m_8dEnabled;
     }
 
     void MusicPlayerManager::set8DEnabled(bool enabled) {
-        auto* mod = Mod::get();
-        if (!mod) return;
-        mod->setSettingValue<bool>("audio-8d", enabled);
+        m_8dEnabled = enabled;
+        if (auto* mod = Mod::get()) {
+            mod->setSettingValue<bool>("audio-8d", enabled);
+        }
     }
 
     float MusicPlayerManager::get8DSpeed() const {
-        auto* mod = Mod::get();
-        if (!mod) return 0.15f;
-        return static_cast<float>(mod->getSettingValue<double>("audio-8d-speed"));
+        return m_8dSpeed;
     }
 
     void MusicPlayerManager::set8DSpeed(float speed) {
-        auto* mod = Mod::get();
-        if (!mod) return;
-        mod->setSettingValue<double>("audio-8d-speed", static_cast<double>(speed));
+        m_8dSpeed = speed;
+        if (auto* mod = Mod::get()) {
+            mod->setSettingValue<double>("audio-8d-speed", static_cast<double>(speed));
+        }
     }
 
     float MusicPlayerManager::getReverb() const {
-        auto* mod = Mod::get();
-        if (!mod) return 0.f;
-        return static_cast<float>(mod->getSettingValue<double>("audio-reverb"));
+        return m_reverb;
     }
 
     void MusicPlayerManager::setReverb(float ms) {
-        auto* mod = Mod::get();
-        if (!mod) return;
-        mod->setSettingValue<double>("audio-reverb", static_cast<double>(ms));
+        m_reverb = ms;
+        if (auto* mod = Mod::get()) {
+            mod->setSettingValue<double>("audio-reverb", static_cast<double>(ms));
+        }
     }
 
     void MusicPlayerManager::setAudioPreset(std::string const& preset) {
-        auto* mod = Mod::get();
-        if (!mod) return;
-        mod->setSettingValue<std::string>("audio-preset", preset);
+        if (auto* mod = Mod::get()) {
+            mod->setSettingValue<std::string>("audio-preset", preset);
+        }
     }
 
     float MusicPlayerManager::getMuffle() const {
-        auto* mod = Mod::get();
-        if (!mod) return 0.f;
-        return static_cast<float>(mod->getSettingValue<double>("audio-muffle"));
+        return m_muffle;
     }
 
     void MusicPlayerManager::setMuffle(float val) {
-        auto* mod = Mod::get();
-        if (!mod) return;
-        mod->setSettingValue<double>("audio-muffle", static_cast<double>(val));
+        m_muffle = val;
+        if (auto* mod = Mod::get()) {
+            mod->setSettingValue<double>("audio-muffle", static_cast<double>(val));
+        }
     }
 
     void MusicPlayerManager::setAudioFilter(std::string const& filter) {
-        auto* mod = Mod::get();
-        if (!mod) return;
-        mod->setSettingValue<std::string>("audio-filter", filter);
+        if (auto* mod = Mod::get()) {
+            mod->setSettingValue<std::string>("audio-filter", filter);
+        }
     }
 
     float MusicPlayerManager::getEqBand(int bandIndex) const {
         if (bandIndex < 0 || bandIndex >= 10) return 0.f;
-        auto* mod = Mod::get();
-        if (!mod) return 0.f;
-        return static_cast<float>(mod->getSettingValue<double>(kEqSettingKeys[bandIndex]));
+        return m_eqBands[bandIndex];
     }
 
     void MusicPlayerManager::setEqBand(int bandIndex, float gainDb) {
         if (bandIndex < 0 || bandIndex >= 10) return;
-        auto* mod = Mod::get();
-        if (!mod) return;
-        mod->setSettingValue<double>(kEqSettingKeys[bandIndex], static_cast<double>(gainDb));
+        m_eqBands[bandIndex] = gainDb;
+        if (auto* mod = Mod::get()) {
+            mod->setSettingValue<double>(kEqSettingKeys[bandIndex], static_cast<double>(gainDb));
+        }
     }
 
     void MusicPlayerManager::applyEqPreset(int presetIndex) {
-        // 0: Flat, 1: Bass Boost, 2: Vocal Boost, 3: Treble Boost, 4: EDM / V-Shape
         constexpr float presets[5][10] = {
-            { 0.f,  0.f,  0.f,  0.f,  0.f,  0.f,  0.f,  0.f,  0.f,  0.f}, // Flat
-            { 5.5f, 6.0f, 4.0f, 2.0f, 0.0f, 0.0f, 0.5f, 1.0f, 1.5f, 2.0f}, // Bass Boost
-            {-2.0f,-1.0f, 0.0f, 2.0f, 4.5f, 5.0f, 4.0f, 2.0f, 1.0f, 0.0f}, // Vocal Boost
-            { 0.0f, 0.0f, 0.5f, 1.0f, 1.5f, 3.0f, 4.5f, 5.5f, 6.0f, 6.0f}, // Treble Boost
-            { 5.0f, 4.5f, 2.0f,-1.0f,-2.5f,-2.0f, 1.5f, 3.5f, 5.0f, 5.5f}  // EDM / V-Shape
+            {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f}, // Flat
+            {5.5f, 6.0f, 4.0f, 2.0f, 0.0f, 0.0f, 0.5f, 1.0f, 1.5f, 2.0f}, // Bass Boost
+            {-2.0f, -1.0f, 0.0f, 2.0f, 4.5f, 5.0f, 4.0f, 2.0f, 1.0f, 0.0f}, // Vocal Boost
+            {0.0f, 0.0f, 0.5f, 1.0f, 1.5f, 3.0f, 4.5f, 5.5f, 6.0f, 6.0f}, // Treble Boost
+            {5.0f, 4.5f, 2.0f, -1.0f, -2.5f, -2.0f, 1.5f, 3.5f, 5.0f, 5.5f} // EDM / V-Shape
         };
 
         if (presetIndex < 0 || presetIndex >= 5) presetIndex = 0;
@@ -399,6 +408,45 @@ namespace rickgdps::music {
         }
     }
 
+    // ─── FMOD FFT DSP Initialisation ─────────────────────────────────────────
+
+    void MusicPlayerManager::initFFT() {
+        auto* engine = FMODAudioEngine::get();
+        if (!engine || !engine->m_system) return;
+
+        // Query real sample rate for accurate frequency mapping
+        int sr = 44100;
+        engine->m_system->getSoftwareFormat(&sr, nullptr, nullptr);
+        m_sampleRate = sr;
+
+        // Create FFT DSP
+        FMOD::DSP* fftDsp = nullptr;
+        if (engine->m_system->createDSPByType(FMOD_DSP_TYPE_FFT, &fftDsp) != FMOD_OK || !fftDsp) {
+            return;
+        }
+
+        // 2048-sample window gives ~21 Hz resolution at 44100 Hz — good enough
+        // for the 20-bar visualizer without being too CPU-heavy.
+        fftDsp->setParameterInt(FMOD_DSP_FFT_WINDOWSIZE, 2048);
+        fftDsp->setParameterInt(FMOD_DSP_FFT_WINDOWTYPE, FMOD_DSP_FFT_WINDOW_HANNING);
+
+        // Attach to master channel group (tail end so we read post-effects)
+        FMOD::ChannelGroup* masterGroup = nullptr;
+        if (engine->m_system->getMasterChannelGroup(&masterGroup) != FMOD_OK || !masterGroup) {
+            fftDsp->release();
+            return;
+        }
+
+        if (masterGroup->addDSP(FMOD_CHANNELCONTROL_DSP_TAIL, fftDsp) != FMOD_OK) {
+            fftDsp->release();
+            return;
+        }
+
+        m_fftDsp = fftDsp;
+    }
+
+    // ─── Visualizer ───────────────────────────────────────────────────────────
+
     std::vector<float> MusicPlayerManager::getVisualizerBars(size_t barCount) {
         if (m_visualizerSmooth.size() != barCount) {
             m_visualizerSmooth.assign(barCount, 0.05f);
@@ -406,63 +454,124 @@ namespace rickgdps::music {
         }
 
         bool active = isPlaying();
-        float muffle = getMuffle();
-        bool is8d = is8DEnabled();
-        float speed8d = get8DSpeed();
+        float muffle = m_muffle;
+        bool is8d = m_8dEnabled;
 
-        // 8D panning phase
-        float panFactor = is8d ? std::sin(m_visualizerPhase * speed8d * 4.0f) : 0.0f;
+        // ── Try real FMOD FFT first ───────────────────────────────────────────
+        bool usedRealFFT = false;
+        if (active && m_fftDsp) {
+            FMOD_DSP_PARAMETER_FFT* fftData = nullptr;
+            unsigned int fftLen = 0;
+            if (m_fftDsp->getParameterData(
+                    FMOD_DSP_FFT_SPECTRUMDATA,
+                    reinterpret_cast<void**>(&fftData),
+                    &fftLen, nullptr, 0) == FMOD_OK && fftData && fftData->length > 0)
+            {
+                int numCh  = std::min(fftData->numchannels, 2);
+                int fftSize = fftData->length; // half-spectrum (0..nyquist)
 
-        for (size_t i = 0; i < barCount; ++i) {
-            float target = 0.05f;
+                // Logarithmic frequency mapping so bass gets more bars
+                constexpr float kMinHz = 20.f;
+                float maxHz  = static_cast<float>(m_sampleRate) * 0.5f;
+                float logMin = std::log2(kMinHz);
+                float logMax = std::log2(maxHz);
+                float hzPerBin = maxHz / static_cast<float>(fftSize);
 
-            if (active) {
-                // Synthesize bar activity from playback harmonics & EQ
-                float fi = static_cast<float>(i);
-                float freqRatio = fi / static_cast<float>(barCount);
+                for (size_t i = 0; i < barCount; ++i) {
+                    float loHz = std::pow(2.f, logMin + (logMax - logMin) * static_cast<float>(i)     / static_cast<float>(barCount));
+                    float hiHz = std::pow(2.f, logMin + (logMax - logMin) * static_cast<float>(i + 1) / static_cast<float>(barCount));
 
-                // Map to 10-band EQ
-                int eqIdx = std::clamp(static_cast<int>(freqRatio * 10.0f), 0, 9);
-                float eqDb = getEqBand(eqIdx);
-                float eqScale = std::pow(10.0f, eqDb / 20.0f); // convert dB to linear gain
+                    int binLo = std::clamp(static_cast<int>(loHz / hzPerBin), 0, fftSize - 1);
+                    int binHi = std::clamp(static_cast<int>(hiHz / hzPerBin), binLo, fftSize - 1);
 
-                // Oscillating organic harmonic waves
-                float wave1 = std::sin(m_visualizerPhase * 5.2f + fi * 0.7f);
-                float wave2 = std::cos(m_visualizerPhase * 8.7f - fi * 1.3f);
-                float wave3 = std::sin(m_visualizerPhase * 2.1f + fi * 0.3f);
-                float raw = std::abs(wave1 * 0.45f + wave2 * 0.35f + wave3 * 0.20f);
+                    float sum = 0.f;
+                    int   cnt = 0;
+                    for (int b = binLo; b <= binHi; ++b) {
+                        float mag = 0.f;
+                        for (int ch = 0; ch < numCh; ++ch) mag += fftData->spectrum[ch][b];
+                        sum += mag / static_cast<float>(numCh);
+                        ++cnt;
+                    }
+                    float raw = (cnt > 0) ? (sum / static_cast<float>(cnt)) : 0.f;
 
-                // Emphasize bass/mid frequencies naturally
-                float curve = 1.0f - freqRatio * 0.45f;
-                target = raw * curve * eqScale * m_volume;
+                    // sqrt-compress linear magnitude into perceptual loudness scale
+                    float target = std::sqrt(raw) * 2.5f;
 
-                // High-frequency attenuation by muffle filter
-                if (freqRatio > (1.0f - muffle * 0.85f)) {
-                    float cutAmount = (freqRatio - (1.0f - muffle * 0.85f)) / 0.85f;
-                    target *= std::max(0.02f, 1.0f - cutAmount * 1.5f);
+                    // EQ band scaling
+                    int eqIdx = std::clamp(static_cast<int>(static_cast<float>(i) / static_cast<float>(barCount) * 10.f), 0, 9);
+                    target *= std::pow(10.f, m_eqBands[eqIdx] / 20.f) * m_volume;
+
+                    // Muffle attenuates high-freq bars
+                    float freqRatio = static_cast<float>(i) / static_cast<float>(barCount);
+                    if (muffle > 0.01f && freqRatio > (1.f - muffle * 0.85f)) {
+                        float cut = (freqRatio - (1.f - muffle * 0.85f)) / 0.85f;
+                        target *= std::max(0.02f, 1.f - cut * 1.5f);
+                    }
+
+                    // 8D spatial panning modulation
+                    if (is8d) {
+                        float barPan = (freqRatio - 0.5f) * 2.f;
+                        float pf     = std::sin(m_visualizerPhase * m_8dSpeed * 4.f);
+                        target *= std::clamp(1.f + pf * barPan * 0.6f, 0.2f, 1.8f);
+                    }
+
+                    target = std::clamp(target, 0.01f, 1.0f);
+
+                    // Asymmetric smoothing: fast attack, slow decay for punchy feel
+                    float alpha = (target > m_visualizerSmooth[i]) ? 0.55f : 0.18f;
+                    m_visualizerSmooth[i] += (target - m_visualizerSmooth[i]) * alpha;
+
+                    if (m_visualizerSmooth[i] > m_visualizerPeaks[i]) {
+                        m_visualizerPeaks[i] = m_visualizerSmooth[i];
+                    } else {
+                        m_visualizerPeaks[i] = std::max(0.02f, m_visualizerPeaks[i] - 0.012f);
+                    }
                 }
-
-                // 8D stereo tilt across bars (left to right tilt)
-                if (is8d) {
-                    float barPan = (fi / static_cast<float>(barCount) - 0.5f) * 2.0f; // -1 to +1
-                    float panMod = 1.0f + panFactor * barPan * 0.6f;
-                    target *= std::clamp(panMod, 0.2f, 1.8f);
-                }
-
-                target = std::clamp(target, 0.06f, 1.0f);
-            } else {
-                // Subtle idle pulse
-                target = 0.04f + 0.02f * std::sin(m_visualizerPhase * 1.5f + static_cast<float>(i) * 0.4f);
+                usedRealFFT = true;
             }
+        }
 
-            // Smooth interpolation
-            m_visualizerSmooth[i] += (target - m_visualizerSmooth[i]) * 0.32f;
+        // ── Fallback: animated sine-wave (paused / FFT not yet ready) ─────────
+        if (!usedRealFFT) {
+            float panFactor = is8d ? std::sin(m_visualizerPhase * m_8dSpeed * 4.0f) : 0.0f;
 
-            // Falling peak caps
-            if (m_visualizerSmooth[i] > m_visualizerPeaks[i]) {
-                m_visualizerPeaks[i] = m_visualizerSmooth[i];
-            } else {
-                m_visualizerPeaks[i] = std::max(0.04f, m_visualizerPeaks[i] - 0.015f);
+            for (size_t i = 0; i < barCount; ++i) {
+                float target = 0.05f;
+
+                if (active) {
+                    float fi = static_cast<float>(i);
+                    float freqRatio = fi / static_cast<float>(barCount);
+
+                    int eqIdx = std::clamp(static_cast<int>(freqRatio * 10.0f), 0, 9);
+                    float eqScale = std::pow(10.0f, m_eqBands[eqIdx] / 20.0f);
+
+                    float raw = std::abs(
+                        std::sin(m_visualizerPhase * 5.2f + fi * 0.7f) * 0.45f +
+                        std::cos(m_visualizerPhase * 8.7f - fi * 1.3f) * 0.35f +
+                        std::sin(m_visualizerPhase * 2.1f + fi * 0.3f) * 0.20f
+                    );
+                    target = raw * (1.0f - freqRatio * 0.45f) * eqScale * m_volume;
+
+                    if (freqRatio > (1.0f - muffle * 0.85f)) {
+                        float cut = (freqRatio - (1.0f - muffle * 0.85f)) / 0.85f;
+                        target *= std::max(0.02f, 1.0f - cut * 1.5f);
+                    }
+                    if (is8d) {
+                        float barPan = (fi / static_cast<float>(barCount) - 0.5f) * 2.0f;
+                        target *= std::clamp(1.0f + panFactor * barPan * 0.6f, 0.2f, 1.8f);
+                    }
+                    target = std::clamp(target, 0.06f, 1.0f);
+                } else {
+                    target = 0.04f + 0.02f * std::sin(m_visualizerPhase * 1.5f + static_cast<float>(i) * 0.4f);
+                }
+
+                m_visualizerSmooth[i] += (target - m_visualizerSmooth[i]) * 0.32f;
+
+                if (m_visualizerSmooth[i] > m_visualizerPeaks[i]) {
+                    m_visualizerPeaks[i] = m_visualizerSmooth[i];
+                } else {
+                    m_visualizerPeaks[i] = std::max(0.04f, m_visualizerPeaks[i] - 0.015f);
+                }
             }
         }
 

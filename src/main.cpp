@@ -611,27 +611,10 @@ namespace {
             case 1: { // GDH Reverb
                 if (reverbMs < 100.f) reverbMs = 10000.f;
                 reverbMs = std::clamp(reverbMs, 100.f, 20000.f);
-                muffle = 0.f;
                 gains = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DECAYTIME, reverbMs / 1000.f);
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_WETLEVEL, 0.f);
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DRYLEVEL, 0.f);
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DIFFUSION, 100.f);
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_DENSITY, 100.f);
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_EARLYDELAY, 20.f);
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_LATEDELAY, 40.f);
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_HFDECAYRATIO, 50.f);
-                g_audioReverbDsp->setParameterFloat(FMOD_DSP_SFXREVERB_LOWSHELFFREQUENCY, 250.f);
-                g_audioReverbDsp->setBypass(false);
-                g_audioMuffleDsp->setBypass(false);
-                g_audioMuffleDsp->setParameterFloat(FMOD_DSP_LOWPASS_CUTOFF, 22000.f);
-                for (std::size_t i = 0; i < g_audioEqDsps.size(); ++i) {
-                    g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_CENTER, kAudioEqFrequencies[i]);
-                    g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_BANDWIDTH, 0.6f);
-                    g_audioEqDsps[i]->setParameterFloat(FMOD_DSP_PARAMEQ_GAIN, 0.f);
-                    g_audioEqDsps[i]->setBypass(true);
-                }
-                return;
+                // Do not return here: the old early return skipped the selected
+                // muffle and acoustic-filter settings whenever GDH Reverb was on.
+                break;
             }
             case 2: // Spatial
                 reverbMs = 1750.f; gains = {1.f, 1.f, 0.f, 0.f, -1.f, 0.f, 1.f, 2.f, 2.f, 1.f}; break;
@@ -1634,6 +1617,9 @@ class $modify(BetterVisualsAudioEngineHook, FMODAudioEngine) {
     void update(float dt) {
         FMODAudioEngine::update(dt);
         update8DAudio(dt);
+        // This is independent of the player popup, so playlist playback keeps
+        // advancing while navigating other game UI.
+        rickgdps::music::MusicPlayerManager::get().update(dt);
     }
 };
 
