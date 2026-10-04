@@ -26,6 +26,8 @@ namespace rickgdps::music {
 
         void onExit() override;
         void update(float dt) override;
+        bool ccTouchBegan(cocos2d::CCTouch* touch, cocos2d::CCEvent* event) override;
+        void keyDown(cocos2d::enumKeyCodes key, double timestamp) override;
 
     private:
         SubTab m_activeTab = SubTab::Player;

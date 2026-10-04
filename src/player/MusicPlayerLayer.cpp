@@ -1,9 +1,12 @@
 #include "MusicPlayerLayer.hpp"
 
 #include "../ModernTheme.hpp"
+#include "AmoledOverlay.hpp"
+#include "EqPresetStore.hpp"
 #include "MusicPlayerTheme.hpp"
 
 #include <Geode/binding/Slider.hpp>
+#include <Geode/ui/Notification.hpp>
 #include <Geode/ui/ScrollLayer.hpp>
 #include <iomanip>
 #include <sstream>
@@ -54,10 +57,13 @@ namespace rickgdps::music {
         }
 
         g_musicOverlayActive.store(true, std::memory_order_release);
+        rickgdps::music::amoled::reset();
+        scheduleUpdate();
         return setup();
     }
 
     void MusicPlayerPopup::onExit() {
+        rickgdps::music::amoled::reset();
         g_musicOverlayActive.store(false, std::memory_order_release);
         Popup::onExit();
     }
@@ -608,6 +614,16 @@ namespace rickgdps::music {
         }
     }
 
+    bool MusicPlayerPopup::ccTouchBegan(cocos2d::CCTouch* touch, cocos2d::CCEvent* event) {
+        rickgdps::music::amoled::notifyActivity();
+        return Popup::ccTouchBegan(touch, event);
+    }
+
+    void MusicPlayerPopup::keyDown(cocos2d::enumKeyCodes key, double timestamp) {
+        rickgdps::music::amoled::notifyActivity();
+        Popup::keyDown(key, timestamp);
+    }
+
     void MusicPlayerPopup::updateVisualizer() {
         if (m_visualizerBars.empty()) return;
 
@@ -1152,6 +1168,81 @@ namespace rickgdps::music {
         );
         pEdm->setPosition({346.f, cardH - 28.f});
         menu->addChild(pEdm);
+
+        // ── Pluggable custom presets (eq_presets.json) ───────────────────────
+        auto* saveBtn = makeTextButton(
+            "SAVE CURRENT",
+            86.f,
+            16.f,
+            [this] {
+                eqpresets::openSavePopup([this] { this->buildTabContent(); });
+            },
+            0.26f
+        );
+        saveBtn->setPosition({56.f, cardH - 46.f});
+        menu->addChild(saveBtn);
+
+        auto* reloadBtn = makeTextButton(
+            "RELOAD",
+            54.f,
+            16.f,
+            [this] {
+                eqpresets::reload();
+                Notification::create("EQ presets reloaded", NotificationIcon::Success, 1.5f)->show();
+                this->buildTabContent();
+            },
+            0.26f
+        );
+        reloadBtn->setPosition({131.f, cardH - 46.f});
+        menu->addChild(reloadBtn);
+
+        constexpr float stripX = 166.f;
+        constexpr float stripW = 256.f;
+        constexpr float stripY = cardH - 54.f;
+        auto* strip = ScrollLayer::create({stripW, 16.f}, false, false);
+        strip->setPosition({stripX, stripY});
+
+        auto* stripMenu = CCMenu::create();
+        stripMenu->setPosition({0.f, 0.f});
+        strip->m_contentLayer->addChild(stripMenu);
+
+        auto const& presets = eqpresets::getPresets();
+        size_t customCount = 0;
+        float cursor = 0.f;
+        for (size_t i = 0; i < presets.size(); ++i) {
+            if (presets[i].builtin) continue;
+            ++customCount;
+
+            float const w = std::clamp(
+                14.f + static_cast<float>(presets[i].name.size()) * 5.2f, 44.f, 110.f
+            );
+            auto* btn = makeTextButton(
+                presets[i].name.c_str(),
+                w,
+                16.f,
+                [this, i] {
+                    eqpresets::applyPreset(i);
+                    this->buildTabContent();
+                },
+                0.24f
+            );
+            btn->setPosition({cursor + w * 0.5f, 8.f});
+            stripMenu->addChild(btn);
+            cursor += w + 4.f;
+        }
+        strip->m_contentLayer->setContentSize({std::max(cursor, stripW), 16.f});
+        card->addChild(strip);
+
+        if (customCount == 0) {
+            auto* hint = CCLabelBMFont::create(
+                "SAVE CURRENT adds custom presets (eq_presets.json)", theme::kFontValues
+            );
+            hint->setScale(0.24f);
+            hint->setColor({130, 170, 170});
+            hint->setAnchorPoint({0.f, 0.5f});
+            hint->setPosition({stripX + 4.f, stripY + 8.f});
+            card->addChild(hint);
+        }
 
         constexpr char const* kFreqLabels[10] = {
             "30Hz", "60Hz", "125Hz", "250Hz", "500Hz", "1kHz", "2kHz", "4kHz", "8kHz", "16kHz"

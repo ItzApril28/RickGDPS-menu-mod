@@ -316,6 +316,12 @@ void ModernSettingsPopup::buildTabContent(Tab tab) {
         addRow(makeFloatRow(listW, "audio-8d-speed", "8D Rotation Speed", 0.05f, 0.50f, 0.01f, "Hz"));
         addRow(makeDivider(listW));
 
+        addRow(makeSectionTitle(listW, "AMOLED Idle Dim"));
+        addRow(makeBoolRow(listW, "audio-amoled-enabled", "AMOLED Idle Dim", "Dim the screen to near-black after inactivity globally across the game. Touch or press any key to wake."));
+        addRow(makeFloatRow(listW, "audio-amoled-timeout", "Idle Timeout", 5.f, 300.f, 5.f, "s"));
+        addRow(makeFloatRow(listW, "audio-amoled-opacity", "Dim Opacity", 0.5f, 1.f, 0.05f));
+        addRow(makeDivider(listW));
+
         addRow(makeSectionTitle(listW, "Audio DSP & Reverb"));
         addRow(makeCycleRow(listW, "audio-preset", "Sound Profile Preset",
             {"Custom","GDH Reverb","Spatial","Cinema","Clear","Bass Boost","Late Night","Small Room","Cathedral","Plate"}));
@@ -362,8 +368,21 @@ void ModernSettingsPopup::buildTabContent(Tab tab) {
         addRow(makeSectionTitle(listW, "HUD & Visual Cheats"));
         addRow(makeBoolRow(listW, "show-percentage", "Show Percentage Label", "Display decimal level percentage HUD."));
         addRow(makeBoolRow(listW, "hide-attempts", "Hide Attempt Counter", "Hide the attempt count during attempts."));
-        addRow(makeBoolRow(listW, "hitbox-enabled", "Show Object Hitboxes", "Draw live bounding boxes for player and hazards."));
+        addRow(makeBoolRow(listW, "hide-ui-enabled", "Hide In-Game HUD", "Hide percentage, attempts, progress bar and pause button during gameplay."));
+        addRow(makeBoolRow(listW, "hitbox-enabled", "Show Object Hitboxes", "Draw live bounding boxes for the player and all on-screen objects."));
         addRow(makeBoolRow(listW, "hitbox-solid", "Solid Fill Hitboxes", "Fill hitboxes with semi-transparent color."));
+        addRow(makeBoolRow(listW, "layout-mode", "Layout Mode", "Hide backgrounds and ground for a clean speedrun layout view."));
+        addRow(makeBoolRow(listW, "mirror-mode", "Mirror Mode", "Flip the gameplay view horizontally."));
+        addRow(makeDivider(listW));
+
+        addRow(makeSectionTitle(listW, "Global Draggable Button"));
+        addRow(makeBoolRow(listW, "draggable-btn-enabled", "Draggable Mod Button", "Floating draggable button across all scenes to quickly open the settings menu."));
+        addRow(makeFloatRow(listW, "draggable-btn-opacity", "Button Opacity", 0.2f, 1.f, 0.05f));
+        addRow(makeDivider(listW));
+
+        addRow(makeSectionTitle(listW, "Start Position"));
+        addRow(makeBoolRow(listW, "start-pos-enabled", "Custom Start Position", "Jump to a specific checkpoint percentage when the level loads."));
+        addRow(makeFloatRow(listW, "start-pos-percent", "Start At", 0.f, 100.f, 1.f, "%"));
         addRow(makeDivider(listW));
 
         addRow(makeSectionTitle(listW, "Music Studio"));

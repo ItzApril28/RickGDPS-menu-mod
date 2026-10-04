@@ -8,7 +8,7 @@
 	},
 	"id": "itzapril28.bettervisual-and-audio",
 	"name": "RickGdps Menu Mod",
-	"version": "v1.4.7-beta",
+	"version": "v1.4.7-beta.2",
 	"early-load": true,
 	"load-priority": -4000,
 	"developer": "RickGdps",
@@ -56,7 +56,6 @@
 			"default": false,
 			"enable-if": "enabled"
 		},
-
 		"title-presets": {
 			"type": "title",
 			"name": "Preset Profiles"
@@ -120,7 +119,6 @@
 			],
 			"enable-if": "enable-fun"
 		},
-
 		"title-resolution": {
 			"type": "title",
 			"name": "Display & Resolution Scaling"
@@ -232,7 +230,6 @@
 			],
 			"enable-if": "enabled"
 		},
-
 		"title-aa-sharpening": {
 			"type": "title",
 			"name": "Anti-Aliasing & Sharpening"
@@ -274,7 +271,6 @@
 			},
 			"enable-if": "cas-enabled"
 		},
-
 		"title-lighting": {
 			"type": "title",
 			"name": "Lighting & Atmosphere"
@@ -419,7 +415,6 @@
 			},
 			"enable-if": "vignette-enabled"
 		},
-
 		"title-color-grading": {
 			"type": "title",
 			"name": "Color Grading & Tonemapping"
@@ -550,7 +545,6 @@
 			"default": false,
 			"enable-if": "enable-fun"
 		},
-
 		"title-camera-distortion": {
 			"type": "title",
 			"name": "Camera & Optical Distortion"
@@ -667,7 +661,6 @@
 			},
 			"enable-if": "wobble-enabled"
 		},
-
 		"title-retro-stylized": {
 			"type": "title",
 			"name": "Retro & Stylized Shaders"
@@ -700,7 +693,12 @@
 			"default": 0.45,
 			"min": 0.0,
 			"max": 1.0,
-			"control": { "arrows": true, "arrow-step": 0.05, "slider": true, "slider-step": 0.01 },
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			},
 			"enable-if": "film-grain-enabled"
 		},
 		"pixelate-enabled": {
@@ -801,7 +799,6 @@
 			},
 			"enable-if": "neon-enabled"
 		},
-
 		"title-hdr-sunset": {
 			"type": "title",
 			"name": "Atmospheric Lighting & HDR"
@@ -983,7 +980,6 @@
 			},
 			"enable-if": "enable-fun"
 		},
-
 		"title-optimization": {
 			"type": "title",
 			"name": "GPU Optimization"
@@ -995,7 +991,6 @@
 			"default": false,
 			"enable-if": "enabled"
 		},
-
 		"title-audio": {
 			"type": "title",
 			"name": "Audio Enhancement & Studio DSP"
@@ -1046,7 +1041,6 @@
 				"slider-step": 0.01
 			}
 		},
-
 		"title-audio-8d": {
 			"type": "title",
 			"name": "8D Audio"
@@ -1072,7 +1066,46 @@
 			},
 			"enable-if": "audio-8d"
 		},
-
+		"title-audio-amoled": {
+			"type": "title",
+			"name": "AMOLED Idle Dim"
+		},
+		"audio-amoled-enabled": {
+			"type": "bool",
+			"name": "AMOLED Idle Dim",
+			"description": "When idle anywhere in the game, the screen fades to near-black - like an always-on display with the current track / level. Touch or press any key to wake.",
+			"default": false
+		},
+		"audio-amoled-timeout": {
+			"type": "float",
+			"name": "AMOLED Idle Timeout (sec)",
+			"description": "Seconds of inactivity before the screen dims.",
+			"default": 15.0,
+			"min": 5.0,
+			"max": 300.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 5.0,
+				"slider": true,
+				"slider-step": 1.0
+			},
+			"enable-if": "audio-amoled-enabled"
+		},
+		"audio-amoled-opacity": {
+			"type": "float",
+			"name": "AMOLED Dim Opacity",
+			"description": "How dark the screen gets when idle (1.0 = fully black).",
+			"default": 0.96,
+			"min": 0.5,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.02,
+				"slider": true,
+				"slider-step": 0.01
+			},
+			"enable-if": "audio-amoled-enabled"
+		},
 		"title-audio-filter": {
 			"type": "title",
 			"name": "Audio Filters"
@@ -1098,7 +1131,6 @@
 				"Space Echo"
 			]
 		},
-
 		"title-audio-equalizer": {
 			"type": "title",
 			"name": "10-Band Graphic Equalizer (dB)"
@@ -1233,7 +1265,6 @@
 				"slider-step": 0.1
 			}
 		},
-
 		"title-hacks-gameplay": {
 			"type": "title",
 			"name": "Gameplay Hacks"
@@ -1251,7 +1282,12 @@
 			"default": 0.5,
 			"min": 0.0,
 			"max": 1.0,
-			"control": { "arrows": true, "arrow-step": 0.05, "slider": true, "slider-step": 0.01 },
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.01
+			},
 			"enable-if": "noclip-enabled"
 		},
 		"speedhack-enabled": {
@@ -1267,7 +1303,12 @@
 			"default": 1.0,
 			"min": 0.1,
 			"max": 10.0,
-			"control": { "arrows": true, "arrow-step": 0.1, "slider": true, "slider-step": 0.05 },
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.1,
+				"slider": true,
+				"slider-step": 0.05
+			},
 			"enable-if": "speedhack-enabled"
 		},
 		"fps-bypass-enabled": {
@@ -1283,10 +1324,14 @@
 			"default": 240.0,
 			"min": 60.0,
 			"max": 1000.0,
-			"control": { "arrows": true, "arrow-step": 10.0, "slider": true, "slider-step": 1.0 },
+			"control": {
+				"arrows": true,
+				"arrow-step": 10.0,
+				"slider": true,
+				"slider-step": 1.0
+			},
 			"enable-if": "fps-bypass-enabled"
 		},
-
 		"title-hacks-auto": {
 			"type": "title",
 			"name": "Auto Helpers"
@@ -1304,7 +1349,12 @@
 			"default": 0.5,
 			"min": 0.0,
 			"max": 3.0,
-			"control": { "arrows": true, "arrow-step": 0.1, "slider": true, "slider-step": 0.05 },
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.1,
+				"slider": true,
+				"slider-step": 0.05
+			},
 			"enable-if": "auto-retry-enabled"
 		},
 		"practice-music-hack": {
@@ -1320,9 +1370,13 @@
 			"default": 0.5,
 			"min": 0.0,
 			"max": 3.0,
-			"control": { "arrows": true, "arrow-step": 0.1, "slider": true, "slider-step": 0.05 }
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.1,
+				"slider": true,
+				"slider-step": 0.05
+			}
 		},
-
 		"title-hacks-hud": {
 			"type": "title",
 			"name": "HUD & Display"
@@ -1339,7 +1393,37 @@
 			"description": "Hide the attempt number label.",
 			"default": false
 		},
-
+		"hide-ui-enabled": {
+			"type": "bool",
+			"name": "Hide In-Game HUD",
+			"description": "Hides the percentage, attempt counter, progress bar and pause button during gameplay for clean screenshots. The quick toggle overlay stays visible.",
+			"default": false
+		},
+		"title-hacks-overlay": {
+			"type": "title",
+			"name": "Global Mod Button"
+		},
+		"draggable-btn-enabled": {
+			"type": "bool",
+			"name": "Draggable Mod Button",
+			"description": "Floating draggable button across all scenes to quickly open the settings menu. Drag to reposition, tap to open.",
+			"default": true
+		},
+		"draggable-btn-opacity": {
+			"type": "float",
+			"name": "Button Opacity",
+			"description": "Opacity of the floating draggable mod button.",
+			"default": 0.85,
+			"min": 0.2,
+			"max": 1.0,
+			"control": {
+				"arrows": true,
+				"arrow-step": 0.05,
+				"slider": true,
+				"slider-step": 0.05
+			},
+			"enable-if": "draggable-btn-enabled"
+		},
 		"title-hacks-visual": {
 			"type": "title",
 			"name": "Visual Cheats"
@@ -1375,7 +1459,6 @@
 			"description": "Flip the game horizontally.",
 			"default": false
 		},
-
 		"title-hacks-anticheat": {
 			"type": "title",
 			"name": "Anti-Cheat"
@@ -1386,7 +1469,6 @@
 			"description": "WARNING: Disables GD's cheat detection. Score submission will be blocked while active.",
 			"default": false
 		},
-
 		"start-pos-enabled": {
 			"type": "bool",
 			"name": "Custom Start Position",
@@ -1400,7 +1482,12 @@
 			"default": 0.0,
 			"min": 0.0,
 			"max": 100.0,
-			"control": { "arrows": true, "arrow-step": 1.0, "slider": true, "slider-step": 0.5 },
+			"control": {
+				"arrows": true,
+				"arrow-step": 1.0,
+				"slider": true,
+				"slider-step": 0.5
+			},
 			"enable-if": "start-pos-enabled"
 		}
 	}

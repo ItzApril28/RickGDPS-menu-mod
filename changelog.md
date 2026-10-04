@@ -1,5 +1,46 @@
 # Changelog
 
+## 1.4.7 - beta.2 — Global Draggable Mod Button & Global AMOLED Idle Dim
+
+### New Features & Enhancements
+- **Global Draggable Mod Button**:
+  - Replaced the in-game quick toggle overlay with a floating mod button that persists across all scenes (main menu, level select, garage, gameplay, editor).
+  - Can be smoothly dragged anywhere on screen and automatically saves its position globally between scenes and game launches.
+  - Symmetrical edge-clamping with centered anchor points for consistent positioning across different screen resolutions.
+  - Robust tap vs. drag detection: single tap opens the settings menu, while dragging repositions the button.
+  - Configurable toggle (`draggable-btn-enabled`) and opacity slider (`draggable-btn-opacity`) in mod settings.
+- **Global AMOLED Idle Dim**:
+  - AMOLED idle dim now works globally across the entire game, not just within the Music Studio popup.
+  - Ticked every frame via `CCDirector::drawScene()`.
+  - Comprehensive activity detection: wakes immediately on any keyboard key, screen touch / mouse click, drag, or mouse wheel scroll.
+  - Dynamic display context:
+    - **Music Playing**: Shows current track title, playback position, and total duration.
+    - **In-Game / PlayLayer**: Shows current level name and progress percentage.
+    - **Menus / Other**: Shows "Geometry Dash" with an idle wake hint.
+  - Waking tap is absorbed to prevent accidental button clicks beneath the dim overlay.
+  - Automatic wake and timer reset on scene transitions.
+
+### Fixes & Improvements
+- **AMOLED Title Sync**: Title now refreshes every frame from `MusicPlayerManager::getCurrentTrack()` and auto-scales to fit long song names.
+- **Spectrum Visualizer Accuracy**: Improved accuracy and reactivity of the real-time spectrum visualizer to track live audio energy.
+- **UI Asset Consistency**: Updated button sprites to use `square02b_001.png` for a cohesive theme.
+
+## 1.4.8 - beta — Quick Toggle Overlay, EQ Presets, AMOLED & HUD Fixes
+
+### New Features
+- **Draggable Quick Toggle Overlay**: floating in-game strip (drag the `≡` handle) with mid-run toggles for Noclip, Speedhack, Auto-Retry, Hitboxes, Layout, Mirror and Hide UI. Position and opacity are remembered between sessions.
+- **Pluggable EQ Presets**: the Music Studio 10-band EQ now shows custom presets from `eq_presets.json` in the mod's persistent folder. `SAVE CURRENT` writes the current curve (with a name prompt), `RELOAD` re-reads the file - hand-edit or share preset files freely.
+- **AMOLED Idle Dim**: while the Music Studio is open, the screen fades to near-black after an idle timeout (default 15 s) showing the current track; touch or press any key to wake. Timeout + dim opacity are configurable.
+- **Hide In-Game HUD**: hides the percentage, attempt counter, progress bar and pause button during gameplay for clean screenshots. The quick toggle overlay stays visible so you can flip it back.
+
+### Fixed — settings that previously did nothing
+- `Player Trail` (`trail-enabled`) now actually hides / restores the trail streaks and trail particles.
+- `Anti-Cheat Bypass` now hooks `GameManager::reportPercentageForLevel` and blocks score / percentage submission while active.
+- `Custom Start Position` (`start-pos-enabled`, `start-pos-percent`) now creates a real start position at the chosen percentage when the level loads.
+- `Respawn Delay` now defers the practice-mode checkpoint respawn by the configured time.
+- `Show Object Hitboxes` now draws real bounding boxes for every on-screen object (hazards highlighted red) through a camera-aligned draw node instead of only player outlines.
+- `Layout Mode` now also hides the ground layers, and both Layout and Mirror modes react instantly when toggled mid-run.
+
 ## 1.4.7 - beta — Music Player Studio & Live Audio DSP
 
 ### Music Player Studio
