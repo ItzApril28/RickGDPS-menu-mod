@@ -1,10 +1,10 @@
-# BetterVisual and Audio (RickGdps Menu Mod) — v1.4.8 - beta
+# BetterVisual and Audio (RickGdps Menu Mod) — v1.4.7 - beta
 
 BetterVisual and Audio is an advanced visual enhancement, audio DSP workstation, and menu mod for Geometry Dash (Geode 2.2081). It features custom shaders, dynamic render scaling, super-sampling, studio audio processing, and an interactive in-game music player.
 
 Configure the mod through the custom in-game settings popup or Geode mod settings.
 
-## What's New in v1.4.8 - beta
+## What's New in v1.4.8 - beta 3
 
 - **Draggable Quick Toggle Overlay**: floating in-game strip with mid-run toggles for Noclip, Speedhack, Auto-Retry, Hitboxes, Layout, Mirror and Hide UI. Drag the `≡` handle to move it; position and opacity are remembered.
 - **Pluggable EQ Presets**: custom 10-band EQ presets are read from `eq_presets.json` in the mod's persistent folder. `SAVE CURRENT` stores the current curve with a name, `RELOAD` picks up hand-edited files.
